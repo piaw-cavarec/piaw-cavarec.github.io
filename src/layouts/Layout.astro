@@ -22,22 +22,74 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
   </head>
   <body class="min-h-screen flex flex-col justify-between font-sans bg-zinc-950 text-zinc-100 border-zinc-900 relative">
     <header class="border-b border-zinc-900 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
-      <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" class="font-mono text-sm font-semibold tracking-tight text-zinc-100 hover:text-zinc-400 transition-colors">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        <a href="/" class="font-mono text-sm sm:text-base font-semibold tracking-tight text-zinc-100 hover:text-zinc-400 transition-colors shrink-0">
           piaw.cavarec
         </a>
-        <nav class="flex items-center gap-5 text-xs font-mono text-zinc-400">
+        
+        <!-- Desktop & Tablet Navigation -->
+        <nav class="hidden sm:flex items-center gap-4 sm:gap-6 text-xs font-mono text-zinc-400">
           <a href="/" class="hover:text-zinc-100 transition-colors">Accueil</a>
           <a href="/projects" class="hover:text-zinc-100 transition-colors">Projets</a>
           <a href="/#about" class="hover:text-zinc-100 transition-colors">À propos</a>
           <a 
             href="/contact" 
-            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-3.5 py-1.5 rounded-full transition-all text-xs flex items-center gap-1.5 shadow-sm font-sans"
+            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-3.5 py-1.5 rounded-full transition-all text-xs flex items-center gap-1.5 shadow-sm font-sans shrink-0"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
             <span>Contact</span>
           </a>
         </nav>
+
+        <!-- Mobile Navigation Controls (< sm) -->
+        <div class="flex items-center gap-2.5 sm:hidden">
+          <a 
+            href="/contact" 
+            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-2.5 py-1 rounded-full transition-all text-xs flex items-center gap-1 shadow-sm font-sans shrink-0"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span>Contact</span>
+          </a>
+
+          <button
+            id="mobileMenuBtn"
+            type="button"
+            aria-label="Ouvrir le menu"
+            aria-expanded="false"
+            class="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-700"
+          >
+            <svg id="hamburgerIcon" class="w-5 h-5 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="closeIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Menu Drawer -->
+      <div 
+        id="mobileMenu" 
+        class="hidden sm:hidden border-b border-zinc-900 bg-zinc-950/95 backdrop-blur-md px-5 py-5 space-y-4 font-mono text-sm text-zinc-300 animate-fadeIn"
+      >
+        <a href="/" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
+          Accueil
+        </a>
+        <a href="/projects" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
+          Projets & Réalisations
+        </a>
+        <a href="/#about" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
+          À propos / Parcours
+        </a>
+        <a href="/contact" class="mobile-nav-link block py-2 text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
+          Me Contacter →
+        </a>
+
+        <div class="pt-2 text-[11px] text-zinc-500 font-mono flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>EPITA SecDevOps • Stage Févr. 2027</span>
+        </div>
       </div>
     </header>
 
@@ -55,26 +107,26 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
     <button
       id="backToTopBtn"
       aria-label="Back to top"
-      class="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 hover:bg-zinc-800 backdrop-blur-md shadow-2xl opacity-0 pointer-events-none translate-y-3 transition-all duration-300 flex items-center justify-center group overflow-hidden"
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 hover:bg-zinc-800 backdrop-blur-md shadow-2xl opacity-0 pointer-events-none translate-y-3 transition-all duration-300 flex items-center justify-center group overflow-hidden"
     >
       <!-- Center Arrow -->
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        width="16" 
-        height="16" 
+        width="14" 
+        height="14" 
         viewBox="0 0 24 24" 
         fill="none" 
         stroke="currentColor" 
         stroke-width="2.5" 
         stroke-linecap="round" 
         stroke-linejoin="round"
-        class="z-10 group-hover:-translate-y-0.5 transition-transform"
+        class="z-10 sm:w-4 sm:h-4 group-hover:-translate-y-0.5 transition-transform"
       >
         <path d="m18 15-6-6-6 6"/>
       </svg>
 
       <!-- Circular SVG Text "BACK TO TOP" -->
-      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full p-1 pointer-events-none select-none">
+      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full p-1 pointer-events-none select-none hidden sm:block">
         <path id="circlePath" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
         <g id="rotatingRing" class="origin-center">
           <text class="text-[9px] font-mono uppercase tracking-[0.22em] fill-zinc-400 group-hover:fill-zinc-200 transition-colors font-medium">
@@ -86,18 +138,41 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
       </svg>
     </button>
 
+    <style is:global>
+      /* Responsive markdown prose tables & pre blocks */
+      .prose table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .prose pre {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* Mobile menu fade animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+    </style>
+
     <script>
+      // Back to top button logic
       const backToTopBtn = document.getElementById('backToTopBtn');
       const rotatingRing = document.getElementById('rotatingRing');
       let lastScrollY = window.scrollY;
       let rotationAngle = 0;
 
-      if (backToTopBtn && rotatingRing) {
+      if (backToTopBtn) {
         window.addEventListener('scroll', () => {
           const currentScrollY = window.scrollY;
           const delta = currentScrollY - lastScrollY;
 
-          // Toggle visibility
           if (currentScrollY > 200) {
             backToTopBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
             backToTopBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
@@ -106,10 +181,7 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
             backToTopBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
           }
 
-          // Dynamic rotation direction:
-          // Scroll DOWN (delta > 0) => rotate Clockwise (+=)
-          // Scroll UP (delta < 0) => rotate Counter-Clockwise (-=)
-          if (delta !== 0) {
+          if (delta !== 0 && rotatingRing) {
             rotationAngle += delta * 0.4;
             rotatingRing.style.transform = `rotate(${rotationAngle}deg)`;
           }
@@ -121,6 +193,50 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       }
+
+      // Mobile Menu Toggle logic
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburgerIcon = document.getElementById('hamburgerIcon');
+      const closeIcon = document.getElementById('closeIcon');
+      const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+      if (mobileMenuBtn && mobileMenu && hamburgerIcon && closeIcon) {
+        const toggleMobileMenu = () => {
+          const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+          const nextState = !isExpanded;
+
+          mobileMenuBtn.setAttribute('aria-expanded', String(nextState));
+          if (nextState) {
+            mobileMenu.classList.remove('hidden');
+            hamburgerIcon.classList.add('hidden');
+            closeIcon.classList.remove('hidden');
+          } else {
+            mobileMenu.classList.add('hidden');
+            hamburgerIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+          }
+        };
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+        // Close menu on link click
+        mobileNavLinks.forEach((link) => {
+          link.addEventListener('click', () => {
+            if (mobileMenuBtn.getAttribute('aria-expanded') === 'true') {
+              toggleMobileMenu();
+            }
+          });
+        });
+
+        // Close on ESC key
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && mobileMenuBtn.getAttribute('aria-expanded') === 'true') {
+            toggleMobileMenu();
+          }
+        });
+      }
     </script>
   </body>
 </html>
+

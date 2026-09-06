@@ -34,25 +34,25 @@ const filterCategories = [
 ---
 
 <Layout title="Tous les Projets — Piaw CAVAREC" description="Index complet de mes projets d'ingénierie, sécurité embarquée, cloud et DevSecOps.">
-  <div class="max-w-3xl mx-auto px-4 py-12 space-y-12">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-12">
     <!-- Main Header -->
     <header class="space-y-4">
-      <h1 class="text-3xl font-semibold text-zinc-100 tracking-tight">
+      <h1 class="text-3xl sm:text-4xl font-semibold text-zinc-100 tracking-tight">
         Projets & Réalisations
       </h1>
 
       <!-- Filter Buttons Bar -->
-      <div class="flex flex-wrap gap-2 font-mono text-xs border-t border-b border-zinc-900 py-3.5" id="filterBar">
+      <div class="flex flex-wrap gap-2 font-mono text-xs border-t border-b border-zinc-900 py-3 sm:py-3.5" id="filterBar">
         <button 
           data-category="all" 
-          class="filter-btn text-zinc-100 bg-zinc-800 border border-zinc-700 px-3 py-1 rounded transition-all font-medium cursor-pointer"
+          class="filter-btn text-zinc-100 bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded transition-all font-medium cursor-pointer"
         >
           Tous
         </button>
         {filterCategories.map((cat) => (
           <button 
             data-category={cat} 
-            class="filter-btn text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-900/60 px-3 py-1 rounded transition-all cursor-pointer"
+            class="filter-btn text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-900/60 px-3 py-1.5 rounded transition-all cursor-pointer"
           >
             {cat}
           </button>
@@ -61,23 +61,23 @@ const filterCategories = [
     </header>
 
     <!-- Section 1: Completed Projects -->
-    <section class="space-y-6" id="completedSection">
+    <section class="space-y-5 sm:space-y-6" id="completedSection">
       <div class="border-b border-zinc-900 pb-3 flex items-baseline justify-between">
-        <h2 class="text-sm font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+        <h2 class="text-xs sm:text-sm font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-2">
           <span>Projets Réalisés</span>
           <span class="text-zinc-600 font-normal">({completedProjects.length})</span>
         </h2>
       </div>
 
-      <div class="space-y-4" id="completedList">
+      <div class="space-y-3.5 sm:space-y-4" id="completedList">
         {completedProjects.map((project: CollectionEntry<'projects'>) => (
           <a 
             href={`/projects/${project.slug}`} 
             data-categories={JSON.stringify(project.data.categories)}
-            class="project-item group p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80"
+            class="project-item group p-4 xs:p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80"
           >
-            <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
-              <div class="flex items-center gap-2.5 flex-wrap">
+            <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-1.5 sm:gap-2 mb-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="text-base font-semibold text-zinc-100 group-hover:text-white transition-colors">
                   {project.data.title}
                 </h3>
@@ -116,23 +116,23 @@ const filterCategories = [
 
     <!-- Section 2: Coming Soon / Lab Work in Progress -->
     {comingSoonProjects.length > 0 && (
-      <section class="space-y-6 pt-4" id="comingSoonSection">
+      <section class="space-y-5 sm:space-y-6 pt-2 sm:pt-4" id="comingSoonSection">
         <div class="border-b border-zinc-900 pb-3 flex items-baseline justify-between">
-          <h2 class="text-sm font-mono text-amber-500/80 uppercase tracking-wider flex items-center gap-2">
+          <h2 class="text-xs sm:text-sm font-mono text-amber-500/80 uppercase tracking-wider flex items-center gap-2">
             <span>En cours au Lab</span>
             <span class="text-amber-600/70 font-normal">({comingSoonProjects.length})</span>
           </h2>
         </div>
 
-        <div class="space-y-4" id="comingSoonList">
+        <div class="space-y-3.5 sm:space-y-4" id="comingSoonList">
           {comingSoonProjects.map((project: CollectionEntry<'projects'>) => (
             <a 
               href={`/projects/${project.slug}`} 
               data-categories={JSON.stringify(project.data.categories)}
-              class="project-item group p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-amber-500/60 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80 opacity-90 hover:opacity-100"
+              class="project-item group p-4 xs:p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-amber-500/60 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80 opacity-90 hover:opacity-100"
             >
-              <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
-                <div class="flex items-center gap-2.5 flex-wrap">
+              <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-1.5 sm:gap-2 mb-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <h3 class="text-base font-semibold text-zinc-200 group-hover:text-amber-200 transition-colors">
                     {project.data.title}
                   </h3>
@@ -201,3 +201,4 @@ const filterCategories = [
     });
   </script>
 </Layout>
+

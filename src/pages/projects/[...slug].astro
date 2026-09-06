@@ -20,9 +20,9 @@ const isComingSoon = project.data.comingSoon;
 ---
 
 <Layout title={`${project.data.title} — Piaw CAVAREC`} description={project.data.description}>
-  <article class="max-w-2xl mx-auto px-4 py-12">
-    <!-- Back Link -->
-    <div class="mb-8 flex items-center justify-between">
+  <article class="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <!-- Back Link & Status Tag -->
+    <div class="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-3">
       <a 
         href="/projects" 
         class="inline-flex items-center text-xs font-mono text-zinc-500 hover:text-zinc-200 transition-colors"
@@ -39,29 +39,29 @@ const isComingSoon = project.data.comingSoon;
     </div>
 
     <!-- Editorial Header -->
-    <header class="border-b border-zinc-900 pb-8 mb-8">
-      <h1 class="text-3xl font-semibold text-zinc-100 tracking-tight mb-4">
+    <header class="border-b border-zinc-900 pb-6 sm:pb-8 mb-6 sm:mb-8">
+      <h1 class="text-2xl xs:text-3xl font-semibold text-zinc-100 tracking-tight mb-3 sm:mb-4">
         {project.data.title}
       </h1>
 
-      <p class="text-sm text-zinc-400 mb-6 leading-relaxed">
+      <p class="text-xs xs:text-sm text-zinc-400 mb-6 leading-relaxed">
         {project.data.description}
       </p>
 
       <!-- Metadata List -->
       <div class="space-y-3 font-mono text-xs text-zinc-400">
-        <div class="flex items-baseline gap-4">
-          <span class="text-zinc-600 w-16 uppercase tracking-wider">Année</span>
+        <div class="flex flex-col xs:flex-row xs:items-baseline gap-1 xs:gap-4">
+          <span class="text-zinc-600 w-20 xs:w-16 uppercase tracking-wider shrink-0">Année</span>
           <span class="text-zinc-200">{project.data.year}</span>
         </div>
 
-        <div class="flex items-baseline gap-4">
-          <span class="text-zinc-600 w-16 uppercase tracking-wider">Contexte</span>
+        <div class="flex flex-col xs:flex-row xs:items-baseline gap-1 xs:gap-4">
+          <span class="text-zinc-600 w-20 xs:w-16 uppercase tracking-wider shrink-0">Contexte</span>
           <span class="text-zinc-200">{project.data.role}</span>
         </div>
 
-        <div class="flex items-start gap-4">
-          <span class="text-zinc-600 w-16 uppercase tracking-wider pt-0.5">Stack</span>
+        <div class="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-4">
+          <span class="text-zinc-600 w-20 xs:w-16 uppercase tracking-wider shrink-0 pt-0.5">Stack</span>
           <div class="flex flex-wrap gap-1.5">
             {project.data.stack.map((item: string) => (
               <span class="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded text-[11px]">
@@ -72,9 +72,9 @@ const isComingSoon = project.data.comingSoon;
         </div>
 
         {(project.data.repoUrl || project.data.liveUrl) && (
-          <div class="flex items-baseline gap-4 pt-2">
-            <span class="text-zinc-600 w-16 uppercase tracking-wider">Liens</span>
-            <div class="flex gap-4">
+          <div class="flex flex-col xs:flex-row xs:items-baseline gap-1 xs:gap-4 pt-1 sm:pt-2">
+            <span class="text-zinc-600 w-20 xs:w-16 uppercase tracking-wider shrink-0">Liens</span>
+            <div class="flex flex-wrap gap-4">
               {project.data.repoUrl && (
                 <a 
                   href={project.data.repoUrl} 
@@ -148,3 +148,4 @@ const isComingSoon = project.data.comingSoon;
     )}
   </article>
 </Layout>
+

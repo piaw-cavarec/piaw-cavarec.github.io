@@ -5,6 +5,9 @@ export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
+      screens: {
+        xs: '475px',
+      },
       fontFamily: {
         mono: ['Fira Code', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -13,3 +16,4 @@ export default {
   },
   plugins: [typography],
 };
+
