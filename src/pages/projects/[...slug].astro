@@ -1,0 +1,150 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project: CollectionEntry<'projects'>) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+const isComingSoon = project.data.comingSoon;
+---
+
+<Layout title={`${project.data.title} — Piaw CAVAREC`} description={project.data.description}>
+  <article class="max-w-2xl mx-auto px-4 py-12">
+    <!-- Back Link -->
+    <div class="mb-8 flex items-center justify-between">
+      <a 
+        href="/projects" 
+        class="inline-flex items-center text-xs font-mono text-zinc-500 hover:text-zinc-200 transition-colors"
+      >
+        ← Retour aux projets
+      </a>
+
+      {isComingSoon && (
+        <span class="inline-flex items-center gap-1.5 font-mono text-[11px] text-amber-400/90 border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+          <span>Bientôt disponible</span>
+        </span>
+      )}
+    </div>
+
+    <!-- Editorial Header -->
+    <header class="border-b border-zinc-900 pb-8 mb-8">
+      <h1 class="text-3xl font-semibold text-zinc-100 tracking-tight mb-4">
+        {project.data.title}
+      </h1>
+
+      <p class="text-sm text-zinc-400 mb-6 leading-relaxed">
+        {project.data.description}
+      </p>
+
+      <!-- Metadata List -->
+      <div class="space-y-3 font-mono text-xs text-zinc-400">
+        <div class="flex items-baseline gap-4">
+          <span class="text-zinc-600 w-16 uppercase tracking-wider">Année</span>
+          <span class="text-zinc-200">{project.data.year}</span>
+        </div>
+
+        <div class="flex items-baseline gap-4">
+          <span class="text-zinc-600 w-16 uppercase tracking-wider">Contexte</span>
+          <span class="text-zinc-200">{project.data.role}</span>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <span class="text-zinc-600 w-16 uppercase tracking-wider pt-0.5">Stack</span>
+          <div class="flex flex-wrap gap-1.5">
+            {project.data.stack.map((item: string) => (
+              <span class="bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded text-[11px]">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {(project.data.repoUrl || project.data.liveUrl) && (
+          <div class="flex items-baseline gap-4 pt-2">
+            <span class="text-zinc-600 w-16 uppercase tracking-wider">Liens</span>
+            <div class="flex gap-4">
+              {project.data.repoUrl && (
+                <a 
+                  href={project.data.repoUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  class="text-zinc-300 hover:text-zinc-100 underline decoration-zinc-800 underline-offset-4 transition-colors"
+                >
+                  GitHub ↗
+                </a>
+              )}
+              {project.data.liveUrl && (
+                <a 
+                  href={project.data.liveUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  class="text-zinc-300 hover:text-zinc-100 underline decoration-zinc-800 underline-offset-4 transition-colors"
+                >
+                  Documentation / Démo ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+
+    {isComingSoon ? (
+      <!-- Coming Soon Skeleton View -->
+      <div class="space-y-8">
+        <!-- Notice Banner -->
+        <div class="border border-amber-500/20 bg-amber-500/5 p-4 rounded-lg text-xs font-mono text-amber-300/90 leading-relaxed">
+          ⚡ <strong>Projet en cours de réalisation au lab :</strong> La documentation technique complète, les schémas d'expérimentation et le rapport d'analyse seront publiés prochainement.
+        </div>
+
+        <!-- Custom Skeleton Loaders -->
+        <div class="space-y-8 pt-2">
+          <!-- Section 1 Skeleton -->
+          <div class="space-y-3">
+            <div class="h-5 bg-zinc-900 border border-zinc-800/80 rounded w-2/5 animate-pulse"></div>
+            <div class="space-y-2 pt-2">
+              <div class="h-3.5 bg-zinc-900/80 rounded w-full animate-pulse"></div>
+              <div class="h-3.5 bg-zinc-900/80 rounded w-11/12 animate-pulse"></div>
+              <div class="h-3.5 bg-zinc-900/80 rounded w-4/5 animate-pulse"></div>
+            </div>
+          </div>
+
+          <!-- Code Block Skeleton -->
+          <div class="h-36 bg-zinc-900/60 border border-zinc-800/60 rounded-lg animate-pulse p-4 space-y-3">
+            <div class="h-3 bg-zinc-800/70 rounded w-1/3"></div>
+            <div class="h-3 bg-zinc-800/50 rounded w-3/4"></div>
+            <div class="h-3 bg-zinc-800/40 rounded w-1/2"></div>
+            <div class="h-3 bg-zinc-800/60 rounded w-2/3"></div>
+          </div>
+
+          <!-- Section 2 Skeleton -->
+          <div class="space-y-3">
+            <div class="h-5 bg-zinc-900 border border-zinc-800/80 rounded w-1/3 animate-pulse"></div>
+            <div class="space-y-2 pt-2">
+              <div class="h-3.5 bg-zinc-900/80 rounded w-full animate-pulse"></div>
+              <div class="h-3.5 bg-zinc-900/80 rounded w-5/6 animate-pulse"></div>
+              <div class="h-3.5 bg-zinc-900/80 rounded w-3/4 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <!-- Rendered Markdown Content -->
+      <div class="prose prose-invert prose-zinc max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-zinc-300 prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+        <Content />
+      </div>
+    )}
+  </article>
+</Layout>

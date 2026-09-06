@@ -1,0 +1,126 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPITA (Bac+5) spécialisé en audit hardware, rétro-ingénierie et DevSecOps." } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="fr" class="bg-zinc-950 text-zinc-100 antialiased selection:bg-zinc-800 selection:text-zinc-100 scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="min-h-screen flex flex-col justify-between font-sans bg-zinc-950 text-zinc-100 border-zinc-900 relative">
+    <header class="border-b border-zinc-900 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
+      <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="font-mono text-sm font-semibold tracking-tight text-zinc-100 hover:text-zinc-400 transition-colors">
+          piaw.cavarec
+        </a>
+        <nav class="flex items-center gap-5 text-xs font-mono text-zinc-400">
+          <a href="/" class="hover:text-zinc-100 transition-colors">Accueil</a>
+          <a href="/projects" class="hover:text-zinc-100 transition-colors">Projets</a>
+          <a href="/#about" class="hover:text-zinc-100 transition-colors">À propos</a>
+          <a 
+            href="/contact" 
+            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-3.5 py-1.5 rounded-full transition-all text-xs flex items-center gap-1.5 shadow-sm font-sans"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span>Contact</span>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-grow">
+      <slot />
+    </main>
+
+    <footer class="border-t border-zinc-900 py-8 text-center text-xs font-mono text-zinc-600">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        &copy; {new Date().getFullYear()} Piaw CAVAREC — EPITA SecDevOps
+      </div>
+    </footer>
+
+    <!-- Framework-style Circular Rotating "Back to top" Button -->
+    <button
+      id="backToTopBtn"
+      aria-label="Back to top"
+      class="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 hover:bg-zinc-800 backdrop-blur-md shadow-2xl opacity-0 pointer-events-none translate-y-3 transition-all duration-300 flex items-center justify-center group overflow-hidden"
+    >
+      <!-- Center Arrow -->
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="16" 
+        height="16" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        class="z-10 group-hover:-translate-y-0.5 transition-transform"
+      >
+        <path d="m18 15-6-6-6 6"/>
+      </svg>
+
+      <!-- Circular SVG Text "BACK TO TOP" -->
+      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full p-1 pointer-events-none select-none">
+        <path id="circlePath" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
+        <g id="rotatingRing" class="origin-center">
+          <text class="text-[9px] font-mono uppercase tracking-[0.22em] fill-zinc-400 group-hover:fill-zinc-200 transition-colors font-medium">
+            <textPath href="#circlePath" startOffset="0%">
+              BACK TO TOP • BACK TO TOP •
+            </textPath>
+          </text>
+        </g>
+      </svg>
+    </button>
+
+    <script>
+      const backToTopBtn = document.getElementById('backToTopBtn');
+      const rotatingRing = document.getElementById('rotatingRing');
+      let lastScrollY = window.scrollY;
+      let rotationAngle = 0;
+
+      if (backToTopBtn && rotatingRing) {
+        window.addEventListener('scroll', () => {
+          const currentScrollY = window.scrollY;
+          const delta = currentScrollY - lastScrollY;
+
+          // Toggle visibility
+          if (currentScrollY > 200) {
+            backToTopBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+            backToTopBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+          } else {
+            backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            backToTopBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+          }
+
+          // Dynamic rotation direction:
+          // Scroll DOWN (delta > 0) => rotate Clockwise (+=)
+          // Scroll UP (delta < 0) => rotate Counter-Clockwise (-=)
+          if (delta !== 0) {
+            rotationAngle += delta * 0.4;
+            rotatingRing.style.transform = `rotate(${rotationAngle}deg)`;
+          }
+
+          lastScrollY = currentScrollY;
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    </script>
+  </body>
+</html>

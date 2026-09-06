@@ -1,0 +1,203 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const allProjects: CollectionEntry<'projects'>[] = await getCollection('projects');
+
+// Separate completed projects: featured first (alphabetical) then others (alphabetical)
+const featuredCompletedProjects = allProjects
+  .filter((p: CollectionEntry<'projects'>) => !p.data.comingSoon && p.data.featured)
+  .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => 
+    a.data.title.localeCompare(b.data.title, 'fr', { sensitivity: 'base' })
+  );
+
+const otherCompletedProjects = allProjects
+  .filter((p: CollectionEntry<'projects'>) => !p.data.comingSoon && !p.data.featured)
+  .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => 
+    a.data.title.localeCompare(b.data.title, 'fr', { sensitivity: 'base' })
+  );
+
+const completedProjects = [...featuredCompletedProjects, ...otherCompletedProjects];
+
+const comingSoonProjects = allProjects
+  .filter((p: CollectionEntry<'projects'>) => p.data.comingSoon)
+  .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => 
+    a.data.title.localeCompare(b.data.title, 'fr', { sensitivity: 'base' })
+  );
+
+const filterCategories = [
+  "Hardware & Embarqué",
+  "DevSecOps / DevOps",
+  "Cloud & Identité",
+  "Cyber & Reverse"
+];
+---
+
+<Layout title="Tous les Projets — Piaw CAVAREC" description="Index complet de mes projets d'ingénierie, sécurité embarquée, cloud et DevSecOps.">
+  <div class="max-w-3xl mx-auto px-4 py-12 space-y-12">
+    <!-- Main Header -->
+    <header class="space-y-4">
+      <h1 class="text-3xl font-semibold text-zinc-100 tracking-tight">
+        Projets & Réalisations
+      </h1>
+
+      <!-- Filter Buttons Bar -->
+      <div class="flex flex-wrap gap-2 font-mono text-xs border-t border-b border-zinc-900 py-3.5" id="filterBar">
+        <button 
+          data-category="all" 
+          class="filter-btn text-zinc-100 bg-zinc-800 border border-zinc-700 px-3 py-1 rounded transition-all font-medium cursor-pointer"
+        >
+          Tous
+        </button>
+        {filterCategories.map((cat) => (
+          <button 
+            data-category={cat} 
+            class="filter-btn text-zinc-400 border border-transparent hover:text-zinc-200 hover:bg-zinc-900/60 px-3 py-1 rounded transition-all cursor-pointer"
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+    </header>
+
+    <!-- Section 1: Completed Projects -->
+    <section class="space-y-6" id="completedSection">
+      <div class="border-b border-zinc-900 pb-3 flex items-baseline justify-between">
+        <h2 class="text-sm font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+          <span>Projets Réalisés</span>
+          <span class="text-zinc-600 font-normal">({completedProjects.length})</span>
+        </h2>
+      </div>
+
+      <div class="space-y-4" id="completedList">
+        {completedProjects.map((project: CollectionEntry<'projects'>) => (
+          <a 
+            href={`/projects/${project.slug}`} 
+            data-categories={JSON.stringify(project.data.categories)}
+            class="project-item group p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-base font-semibold text-zinc-100 group-hover:text-white transition-colors">
+                  {project.data.title}
+                </h3>
+                {project.data.featured && (
+                  <span class="font-mono text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-300 group-hover:border-zinc-600 px-2 py-0.5 rounded font-normal transition-colors">
+                    Vedette
+                  </span>
+                )}
+              </div>
+              <div class="font-mono text-xs text-zinc-400 flex items-center gap-2 shrink-0">
+                <span>{project.data.year}</span>
+                <span class="group-hover:translate-x-1.5 text-zinc-500 group-hover:text-white transition-all">→</span>
+              </div>
+            </div>
+
+            <p class="text-xs text-zinc-400 group-hover:text-zinc-200 mb-3 leading-relaxed transition-colors">
+              {project.data.description}
+            </p>
+
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              {project.data.stack.slice(0, 5).map((tech: string) => (
+                <span class="font-mono text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-300 group-hover:border-zinc-700 group-hover:text-white px-2 py-0.5 rounded font-medium transition-colors">
+                  {tech}
+                </span>
+              ))}
+              {project.data.stack.length > 5 && (
+                <span class="font-mono text-[10px] text-zinc-500 font-mono px-1 py-0.5">
+                  +{project.data.stack.length - 5}
+                </span>
+              )}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Section 2: Coming Soon / Lab Work in Progress -->
+    {comingSoonProjects.length > 0 && (
+      <section class="space-y-6 pt-4" id="comingSoonSection">
+        <div class="border-b border-zinc-900 pb-3 flex items-baseline justify-between">
+          <h2 class="text-sm font-mono text-amber-500/80 uppercase tracking-wider flex items-center gap-2">
+            <span>En cours au Lab</span>
+            <span class="text-amber-600/70 font-normal">({comingSoonProjects.length})</span>
+          </h2>
+        </div>
+
+        <div class="space-y-4" id="comingSoonList">
+          {comingSoonProjects.map((project: CollectionEntry<'projects'>) => (
+            <a 
+              href={`/projects/${project.slug}`} 
+              data-categories={JSON.stringify(project.data.categories)}
+              class="project-item group p-5 block border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-amber-500/60 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-zinc-950/80 opacity-90 hover:opacity-100"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <h3 class="text-base font-semibold text-zinc-200 group-hover:text-amber-200 transition-colors">
+                    {project.data.title}
+                  </h3>
+                  <span class="font-mono text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2 py-0.5 rounded font-normal">
+                    Bientôt disponible
+                  </span>
+                </div>
+                <div class="font-mono text-xs text-zinc-400 flex items-center gap-2 shrink-0">
+                  <span>{project.data.year}</span>
+                  <span class="group-hover:translate-x-1.5 text-zinc-500 group-hover:text-amber-300 transition-all">→</span>
+                </div>
+              </div>
+
+              <p class="text-xs text-zinc-400 group-hover:text-zinc-200 mb-3 leading-relaxed transition-colors">
+                {project.data.description}
+              </p>
+
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                {project.data.stack.slice(0, 5).map((tech: string) => (
+                  <span class="font-mono text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 group-hover:border-zinc-700 group-hover:text-zinc-200 px-2 py-0.5 rounded font-medium transition-colors">
+                    {tech}
+                  </span>
+                ))}
+                {project.data.stack.length > 5 && (
+                  <span class="font-mono text-[10px] text-zinc-500 font-mono px-1 py-0.5">
+                    +{project.data.stack.length - 5}
+                  </span>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+
+  <!-- Client-side Filtering Script -->
+  <script>
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const projectItems = document.querySelectorAll('.project-item');
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        // Update active button state
+        filterBtns.forEach((b) => {
+          b.classList.remove('text-zinc-100', 'bg-zinc-800', 'border-zinc-700', 'font-medium');
+          b.classList.add('text-zinc-400', 'border-transparent');
+        });
+
+        btn.classList.remove('text-zinc-400', 'border-transparent');
+        btn.classList.add('text-zinc-100', 'bg-zinc-800', 'border-zinc-700', 'font-medium');
+
+        const selectedCat = btn.getAttribute('data-category');
+
+        projectItems.forEach((item) => {
+          const itemCategoriesRaw = item.getAttribute('data-categories') || '[]';
+          const itemCategories: string[] = JSON.parse(itemCategoriesRaw);
+
+          if (selectedCat === 'all' || itemCategories.includes(selectedCat || '')) {
+            (item as HTMLElement).style.display = 'block';
+          } else {
+            (item as HTMLElement).style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+</Layout>
