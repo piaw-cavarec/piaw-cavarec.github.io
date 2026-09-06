@@ -5,7 +5,7 @@ year: 2026
 role: "Projet Hardware & Assemblage DIY"
 categories: ["Hardware & Embarqué"]
 stack: ["Framework 13", "Intel Core Ultra 5", "LPCAMM2 LPDDR5X", "Linux", "Hardware DIY", "Modular Architecture"]
-featured: true
+featured: false
 comingSoon: false
 ---
 
