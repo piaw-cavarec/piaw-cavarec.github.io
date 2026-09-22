@@ -14,7 +14,7 @@ comingSoon: false
 > 📄 **RAPPORT TECHNIQUE**  
 > **Évaluation de la Sécurité des Bus Inter-Composants : Sniffing Passif I²C, Rétro-Ingénierie de Mémoire EEPROM 24LC256 et Contre-Mesures Matérielles**  
 > *Banc d'essai d'instrumentation & rétro-ingénierie de bus de communication* — Piaw CAVAREC (Septembre 2026)  
-> 📥 **[Consulter / Télécharger le Rapport Scientifique Complet en PDF (23 pages, 511 Ko)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)**
+> 📥 **[Consulter / Télécharger le Rapport Technique Complet en PDF (23 pages, 511 Ko)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)**
 
 ---
 
