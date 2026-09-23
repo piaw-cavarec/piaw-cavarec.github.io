@@ -7,7 +7,7 @@ categories: ["Hardware & Embarqué", "Cyber & Reverse"]
 stack: ["I²C", "EEPROM 24LC256", "ESP32-S3", "PulseView", "Sigrok", "Analyseur Logique", "PlatformIO / C++", "Audit Hardware", "CVSS v3.1", "STRIDE"]
 liveUrl: "/docs/rapport-lab-analyse-i2c-eeprom.pdf"
 repoUrl: "https://github.com/piaw-cavarec"
-featured: false
+featured: true
 comingSoon: false
 ---
 
