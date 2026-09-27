@@ -24,13 +24,27 @@ L'objectif de cette étude était de concevoir le dossier d'architecture techniq
 
 La stratégie privilégie une approche progressive en 2 temps (Transition hybride puis cible 100% Cloud-Only) pour éviter toute rupture de service :
 
-```text
-[ Infrastructure On-Premise (Existant) ]            [ Architecture Cible (Cloud Azure) ]
-• Annuaire AD DS (Kerberos/LDAP/GPO)                • Entra ID (IdP central, OAuth2/OIDC/SAML)
-• Serveurs Web & Bases de données                   • Microsoft Intune (Gestion des postes à distance)
-• Pare-feux pfSense & Stockage GlusterFS  ───>      • Subnets segmentés (Web/App/Data/Mgmt) + NSG
-• Bastion Guacamole & Vault secrets                 • Azure Bastion + VPN S2S + Azure Firewall
-• Supervision Grafana & Wazuh SIEM                  • Azure Backup + Azure Site Recovery (ASR)
+```mermaid
+flowchart LR
+    subgraph ONPREM["Infrastructure On-Premise (Existant)"]
+        direction TB
+        OP1["Annuaire AD DS (Kerberos/LDAP/GPO)"]
+        OP2["Serveurs Web & Bases de données"]
+        OP3["Pare-feux pfSense & Stockage GlusterFS"]
+        OP4["Bastion Guacamole & Vault secrets"]
+        OP5["Supervision Grafana & Wazuh SIEM"]
+    end
+
+    subgraph AZURE["Architecture Cible (Cloud Azure)"]
+        direction TB
+        AZ1["<b>Entra ID</b> (IdP central, OAuth2/OIDC/SAML)"]
+        AZ2["<b>Microsoft Intune</b> (Gestion des postes à distance)"]
+        AZ3["<b>Subnets segmentés</b> (Web/App/Data/Mgmt) + NSG"]
+        AZ4["<b>Azure Bastion</b> + VPN S2S + Azure Firewall"]
+        AZ5["<b>Azure Backup + ASR</b> (Reprise d'activité)"]
+    end
+
+    ONPREM ==>|"Transition Hybride puis Cloud-Only"| AZURE
 ```
 
 ### Transformation du Modèle d'Identité (AD DS → Entra ID)
@@ -46,19 +60,21 @@ La migration de l'annuaire ne consiste pas en une simple copie, mais en une refo
 
 L'architecture réseau Azure (`VNET 10.x.0.0/16`) applique le principe du **moindre privilège réseau (*POLP*) et du "Deny par défaut"** :
 
-```text
-+-----------------------------------------------------------------------------------+
-|                                 VNET AZURE (10.x.0.0/16)                          |
-|                                                                                   |
-|  [ Subnet Web (10.x.1.0/24) ]   --> NSG DENY (Front applicatif)                   |
-|  [ Subnet App (10.x.2.0/24) ]   --> NSG DENY (Logique métier)                     |
-|  [ Subnet Data (10.x.3.0/24) ]  --> NSG DENY (Bases de données)                  |
-|  [ Subnet Mgmt (10.x.10.0/24) ] --> NSG DENY (Administration)                     |
-+-----------------------------------------------------------------------------------+
-       ^                                 ^                                 ^
-       |                                 |                                 |
- [ Azure Bastion ]             [ VPN Site-to-Site ]               [ Azure Firewall ]
-  Admin sécurisé                Tunnels chiffrés                   Filtrage sortant
+```mermaid
+flowchart TD
+    subgraph VNET["VNET AZURE (10.x.0.0/16) - Modèle Zero Trust"]
+        direction TB
+        S_WEB["<b>Subnet Web (10.x.1.0/24)</b><br/>Front applicatif<br/><i>NSG DENY par défaut</i>"]
+        S_APP["<b>Subnet App (10.x.2.0/24)</b><br/>Logique métier<br/><i>NSG DENY par défaut</i>"]
+        S_DATA["<b>Subnet Data (10.x.3.0/24)</b><br/>Bases de données<br/><i>NSG DENY par défaut</i>"]
+        S_MGMT["<b>Subnet Mgmt (10.x.10.0/24)</b><br/>Administration<br/><i>NSG DENY par défaut</i>"]
+
+        S_WEB --> S_APP --> S_DATA
+    end
+
+    BASTION["<b>Azure Bastion</b><br/>Admin sécurisé"] --> S_MGMT
+    VPN["<b>VPN Site-to-Site</b><br/>Tunnels chiffrés"] --> VNET
+    FW["<b>Azure Firewall</b><br/>Filtrage sortant"] --- VNET
 ```
 
 - **Passerelle VPN Site-to-Site (S2S)** : Tunnels chiffrés reliant les sites physiques à Azure.

@@ -22,17 +22,16 @@ L'objectif principal était d'automatiser les contrôles de sécurité à chaque
 
 Avant d'écrire la moindre ligne de code ou de correctif, une analyse des menaces selon le modèle **STRIDE** a été réalisée sur le Data Flow Diagram (DFD) de l'application :
 
-```text
-+--------------+   Req. HTTP   +-----------------+   Req. SQL   +---------------+
-|  Utilisateur | ------------> |   App Flask     | -----------> |  Base SQLite  |
-|   (Acteur)   |               |   (Processus)   |              |  (Stockage)   |
-+--------------+               +-----------------+              +---------------+
-                                       |
-                                       | Lecture / Écriture
-                                       v
-                               +-----------------+
-                               |  Uploads / FS   |
-                               +-----------------+
+```mermaid
+flowchart LR
+    USER["<b>Utilisateur</b><br/>(Acteur)"]
+    APP["<b>Application Flask</b><br/>(Processus)"]
+    DB[("<b>Base SQLite</b><br/>(Stockage)")]
+    FS["<b>Uploads / FS</b><br/>(Stockage local)"]
+
+    USER -- "Req. HTTP" --> APP
+    APP -- "Req. SQL" --> DB
+    APP -- "Lecture / Écriture" --> FS
 ```
 
 ### Bilan de l'évaluation initiale (19 vulnérabilités)
@@ -47,10 +46,17 @@ Avant d'écrire la moindre ligne de code ou de correctif, une analyse des menace
 
 Le pipeline de CI/CD GitLab a été découpé en 7 étapes séquentielles avec exécution parallèle des scanners statiques :
 
-```text
-[ Stage 1: Scan ] ──> [ Stage 2: Build ] ──> [ Stage 3: Scan Image ] ──> [ Stage 4: Sign ] ──> [ Stage 5: Staging ] ──> [ Stage 6: DAST ] ──> [ Stage 7: Prod ]
- (semgrep, gitleaks    (docker build         (trivy:image)               (cosign attest      (rsync + SSH           (OWASP ZAP         (Déploiement
-  syft, hadolint)       dind + digest)                                    SLSA L2)            deploy staging)        baseline)          manuel contrôlé)
+```mermaid
+flowchart LR
+    S1["<b>Stage 1: Scan</b><br/>semgrep, gitleaks,<br/>syft, hadolint"]
+    S2["<b>Stage 2: Build</b><br/>docker build dind<br/>+ digest"]
+    S3["<b>Stage 3: Scan Image</b><br/>trivy:image"]
+    S4["<b>Stage 4: Sign</b><br/>cosign attest<br/>SLSA L2"]
+    S5["<b>Stage 5: Staging</b><br/>rsync + SSH<br/>deploy staging"]
+    S6["<b>Stage 6: DAST</b><br/>OWASP ZAP<br/>baseline"]
+    S7["<b>Stage 7: Prod</b><br/>Déploiement<br/>manuel contrôlé"]
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
 ```
 
 ### 1. Scans Statiques & Qualité (Stage Scan & SCA)
@@ -91,12 +97,23 @@ Le pipeline de CI/CD GitLab a été découpé en 7 étapes séquentielles avec e
 
 ## Bilan de la Posture de Sécurité
 
-```text
-AVANT LA MISSION                                 APRÈS LA MISSION
-+------------------------------------+          +------------------------------------+
-| 19 Vulnérabilités (3 Crit., 7 Élev)|  ----->  | 0 Alerte ZAP DAST / 0 Vuln High    |
-| Authentification vulnérable SQLi   |          | Chaîne CI/CD à 11 jobs bloquants   |
-| Mots de passe en MD5 sans sel      |          | Image conteneur signée Cosign SLSA2|
-| Aucun contrôle de sécurité en CI   |          | Déploiement par Digest Immuable    |
-+------------------------------------+          +------------------------------------+
+```mermaid
+flowchart LR
+    subgraph BEFORE["AVANT LA MISSION"]
+        direction TB
+        B1["<b>19 Vulnérabilités</b> (3 Crit., 7 Élev)"]
+        B2["Authentification vulnérable SQLi"]
+        B3["Mots de passe en MD5 sans sel"]
+        B4["Aucun contrôle de sécurité en CI"]
+    end
+
+    subgraph AFTER["APRÈS LA MISSION"]
+        direction TB
+        A1["<b>0 Alerte ZAP DAST / 0 Vuln High</b>"]
+        A2["Chaîne CI/CD à 11 jobs bloquants"]
+        A3["Image conteneur signée Cosign SLSA2"]
+        A4["Déploiement par Digest Immuable"]
+    end
+
+    BEFORE ==> AFTER
 ```

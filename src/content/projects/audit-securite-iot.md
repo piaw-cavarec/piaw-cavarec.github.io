@@ -34,11 +34,14 @@ L'inspection recto/verso du circuit imprimé (PCB) a permis de cartographier la 
 
 ## Méthodologie d'Anonymisation & Étapes de l'Audit
 
-```text
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
-|  Phase 1 : Reconnaiss.| --> |  Phase 2 : Extraction | --> |  Phase 3 : Analyse    | --> |  Phase 4 : Remédiation|
-|  Inspection PCB & UART|     |  Dump NOR Flash SPI   |     |  Ghidra & Binwalk     |     |  CVSS v3.1 & Roadmap  |
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
+```mermaid
+flowchart LR
+    P1["<b>Phase 1 : Reconnaissance</b><br/>Inspection PCB & UART"]
+    P2["<b>Phase 2 : Extraction</b><br/>Dump NOR Flash SPI"]
+    P3["<b>Phase 3 : Analyse</b><br/>Ghidra & Binwalk"]
+    P4["<b>Phase 4 : Remédiation</b><br/>CVSS v3.1 & Roadmap"]
+
+    P1 --> P2 --> P3 --> P4
 ```
 
 1. **Reconnaissance & Probing** : Identification des boîtiers (SOP8, SOIC8), repérage des bus de communication et branchement d'un analyseur logique / convertisseur USB-UART.

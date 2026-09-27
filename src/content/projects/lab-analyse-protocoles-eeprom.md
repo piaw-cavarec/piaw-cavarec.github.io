@@ -46,30 +46,22 @@ Un biais de conception prédominant, désigné sous le terme de **Perimeter Defe
 
 ### Schéma Fonctionnel du Vecteur d'Attaque
 
-```text
-+------------------------------------+                         +------------------------------------+
-|        Microcontrôleur Hôte        |    Bus I²C en clair     |          EEPROM Externe            |
-|       ESP32-S3 (Xtensa 240MHz)     | ----------------------> |     Microchip 24LC256 (PDIP-8)     |
-+------------------------------------+    SDA / SCL @ 100 kHz  +------------------------------------+
-                  |
-                  | Sondage Passif Haute Impédance (1 MΩ // 10 pF)
-                  v
-+------------------------------------+
-|        Analyseur Logique USB       |
-|       8 Canaux / 24 MHz (fx2lafw)  |
-+------------------------------------+
-                  | Flux USB brut
-                  v
-+------------------------------------+
-|         PulseView / Sigrok         |
-|    Stacked Decoders : I²C + 24xx   |
-+------------------------------------+
-                  | Décodage immédiat
-                  v
-+------------------------------------+
-|       Secret Exfiltré en Clair     |
-|       "SECRET_KEY_1234" (ASCII)    |
-+------------------------------------+
+```mermaid
+flowchart TD
+    subgraph BUS["Cible Physique & Bus Dévoilé"]
+        direction LR
+        ESP["Microcontrôleur Hôte<br/><b>ESP32-S3 (Xtensa 240MHz)</b>"]
+        EEPROM["EEPROM Externe<br/><b>Microchip 24LC256 (PDIP-8)</b>"]
+        ESP -- "Bus I²C en clair<br/>SDA / SCL @ 100 kHz" --> EEPROM
+    end
+
+    ANALYZER["Analyseur Logique USB<br/><b>8 Canaux / 24 MHz (fx2lafw)</b>"]
+    PULSE["PulseView / Sigrok<br/><b>Stacked Decoders : I²C + 24xx</b>"]
+    SECRET["Secret Exfiltré en Clair<br/><b>'SECRET_KEY_1234' (ASCII)</b>"]
+
+    ESP -- "Sondage Passif Haute Impédance<br/>(1 MΩ // 10 pF)" --> ANALYZER
+    ANALYZER -- "Flux USB brut" --> PULSE
+    PULSE -- "Décodage immédiat" --> SECRET
 ```
 
 ### Classification CVSS v3.1 & Modélisation des Menaces STRIDE
@@ -104,12 +96,14 @@ Un biais de conception prédominant, désigné sous le terme de **Perimeter Defe
 
 *Comment ce banc d'essai a été conçu, assemblé et exploité de A à Z en laboratoire personnel au cours d'un week-end complet.*
 
-```text
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
-|  VENDREDI SOIR        | --> |  SAMEDI MATIN         | --> |  SAMEDI APRÈS-MIDI    | --> |  DIMANCHE             |
-|  Prise en main ESP32  |     |  Datasheet EEPROM     |     |  Câblage I²C &        |     |  Sniffing PulseView   |
-|  Simu Wokwi & LED     |     |  Brochage & Pièges    |     |  Validation 0x42      |     |  Exfiltration clé     |
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
+```mermaid
+flowchart LR
+    V["<b>VENDREDI SOIR</b><br/>Prise en main ESP32<br/>Simu Wokwi & LED"]
+    SM["<b>SAMEDI MATIN</b><br/>Datasheet EEPROM<br/>Brochage & Pièges"]
+    SA["<b>SAMEDI APRÈS-MIDI</b><br/>Câblage I²C &<br/>Validation 0x42"]
+    D["<b>DIMANCHE</b><br/>Sniffing PulseView<br/>Exfiltration clé"]
+
+    V --> SM --> SA --> D
 ```
 
 ---

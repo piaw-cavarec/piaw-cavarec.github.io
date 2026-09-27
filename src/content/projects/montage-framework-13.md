@@ -35,11 +35,14 @@ La configuration a été spécifiée pour offrir un équilibre optimal entre pui
 
 ## Étapes du Montage & Assemblage Pas-à-Pas
 
-```text
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
-| 1. Inspection Châssis | --> | 2. Installation RAM   | --> | 3. Connexion Input   | --> | 4. Pose Bezel & Cards |
-| Déballage & Outillage |     | LPCAMM2 & Fixation    |     | Cover & Blank Keyboard|     | Tests BIOS & Boot Linux|
-+-----------------------+     +-----------------------+     +-----------------------+     +-----------------------+
+```mermaid
+flowchart LR
+    S1["<b>1. Inspection Châssis</b><br/>Déballage & Outillage"]
+    S2["<b>2. Installation RAM</b><br/>LPCAMM2 & Fixation"]
+    S3["<b>3. Connexion Input</b><br/>Cover & Blank Keyboard"]
+    S4["<b>4. Pose Bezel & Cards</b><br/>Tests BIOS & Boot Linux"]
+
+    S1 --> S2 --> S3 --> S4
 ```
 
 ### 1. Ingestion du Châssis & Ouverture

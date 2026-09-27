@@ -22,21 +22,16 @@ L'architecture devait garantir la haute disponibilité des services stratégique
 
 L'infrastucture relie 4 entités géographiques interconnectées en topologie **Hub-and-Spoke** via des tunnels VPN chiffrés :
 
-```text
-                                  +-----------------------+
-                                  |     DATACENTER        |
-                                  |   (Hub Principal)     |
-                                  | pfSense / OpenVPN CA  |
-                                  +-----------------------+
-                                        /     |     \
-                                       /      |      \
-                        Tunnels VPN  /        |        \  Tunnels VPN
-                                   /          |          \
-                                  v           v           v
-                    +------------------+  +----------+  +------------------+
-                    |  Agence Stratég. |  |  Siège   |  | Agences Distantes|
-                    | (Spoke Sécurisé) |  | (Spoke)  |  |  (Spokes 1 & 2)  |
-                    +------------------+  +----------+  +------------------+
+```mermaid
+flowchart TD
+    DC["<b>DATACENTER (Hub Principal)</b><br/>pfSense / OpenVPN CA / Proxmox"]
+    SPOKE1["<b>Agence Stratégique</b><br/>(Spoke Sécurisé - Proxmox/VLAN)"]
+    SPOKE2["<b>Siège Social</b><br/>(Spoke - Contrôleur SIEGEDC01)"]
+    SPOKE3["<b>Agences Distantes</b><br/>(Spokes 1 & 2)"]
+
+    DC <-- "Tunnel VPN OpenVPN<br/>(AES-256-GCM)" --> SPOKE1
+    DC <-- "Tunnel VPN OpenVPN<br/>(AES-256-GCM)" --> SPOKE2
+    DC <-- "Tunnel VPN OpenVPN<br/>(AES-256-GCM)" --> SPOKE3
 ```
 
 ### Chiffrement & Autorité de Certification (PKI)
@@ -48,10 +43,16 @@ L'infrastucture relie 4 entités géographiques interconnectées en topologie **
 
 ## Socle d'Identité & Sécurité Système
 
-```text
-[ Datacenter ]                        [ Siège Social ]
-Contrôleur de domaine (DCDC01) <===> Contrôleur de domaine (SIEGEDC01)
-               Réplication Active Directory (AD DS)
+```mermaid
+flowchart LR
+    subgraph DC["Site Datacenter"]
+        DCDC01["<b>Contrôleur DCDC01</b><br/>AD DS / DNS / Kerberos"]
+    end
+    subgraph SIEGE["Site Siège Social"]
+        SIEGEDC01["<b>Contrôleur SIEGEDC01</b><br/>AD DS / DNS / Kerberos"]
+    end
+
+    DCDC01 <-- "Réplication Active Directory (AD DS)<br/>Multi-Maître & Stratégies GPO" --> SIEGEDC01
 ```
 
 - **Active Directory (AD DS)** : Annuaire d'entreprise répliqué entre le Datacenter et le Siège social (`SIEGEDC01`, `DCDC01`), assurant la gestion centralisée des utilisateurs, la jonction de domaine, le contrôle Kerberos/LDAP et les stratégies de groupe (GPO).
@@ -63,21 +64,29 @@ Contrôleur de domaine (DCDC01) <===> Contrôleur de domaine (SIEGEDC01)
 
 Les applications d'entreprise (Nextcloud, OrangeHRM, Dolibarr) sont orchestrées au sein d'un cluster Kubernetes léger (**K3s**) déployé sur l'infrastructure Proxmox VE :
 
-```text
-+-----------------------------------------------------------------------------------+
-|                              CLUSTER KUBERNETES (K3S)                             |
-|                                                                                   |
-|  [ Control Plane ] ──> [ Worker Node 1 ]   [ Worker Node 2 ]   [ Worker Node 3 ]  |
-|                                |                   |                   |          |
-|                                v                   v                   v          |
-|                     +--------------------------------------------------+          |
-|                     |     Stockage Distribué Répliqué (Longhorn)       |          |
-|                     |     Mariadb Operator + Volume Persistant         |          |
-|                     +--------------------------------------------------+          |
-|                                                |                                  |
-|                                                v                                  |
-|                                 Équilibrage VIP (Kube-VIP)                        |
-+-----------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph K3S["CLUSTER KUBERNETES (K3S)"]
+        CP["<b>Control Plane</b><br/>k3s-master (API Server & Raft)"]
+
+        subgraph WORKERS["Nœuds de Calcul (Workers)"]
+            W1["<b>Worker Node 1</b><br/>Apps Métier"]
+            W2["<b>Worker Node 2</b><br/>Apps Métier"]
+            W3["<b>Worker Node 3</b><br/>Apps Métier"]
+        end
+
+        subgraph STORAGE["Stockage Distribué & Persistance"]
+            LH["<b>Longhorn Distributed Storage</b><br/>Réplication temps réel des blocs CSI"]
+            DB["<b>MariaDB Operator</b><br/>Volume Persistant Répliqué"]
+        end
+
+        VIP["<b>Équilibrage VIP (Kube-VIP)</b><br/>IP Virtuelle Flottante DMZ"]
+    end
+
+    CP --> W1 & W2 & W3
+    W1 & W2 & W3 --> LH
+    LH --> DB
+    LH --> VIP
 ```
 
 ### Composants clés du cluster K3s
