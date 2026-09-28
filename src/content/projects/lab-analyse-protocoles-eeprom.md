@@ -1,10 +1,10 @@
 ---
 title: "Le lab d'analyse de protocoles avec microcontrôleur & EEPROM"
-description: "Rapport d'évaluation technique & Journal de lab sur un week-end : sniffing passif I²C sur EEPROM 24LC256, cotation CVSS v3.1 (6.8), modélisation STRIDE et architecture Zero Trust on PCB."
+description: "Comment intercepter le mot de passe d'un objet électronique avec un outil à 20 € ? Récit pas-à-pas d'une enquête matérielle sur un week-end, expliqué pour tous (avec le rapport technique complet pour les spécialistes)."
 year: 2026
 role: "Audit Hardware & Rétro-Ingénierie (Lab Personnel)"
 categories: ["Hardware & Embarqué", "Cyber & Reverse"]
-stack: ["I²C", "EEPROM 24LC256", "ESP32-S3", "PulseView", "Sigrok", "Analyseur Logique", "PlatformIO / C++", "Audit Hardware", "CVSS v3.1", "STRIDE"]
+stack: ["I²C", "EEPROM 24LC256", "ESP32-S3", "PulseView", "Sigrok", "Analyseur Logique", "Audit Hardware", "CVSS 6.8"]
 liveUrl: "/docs/rapport-lab-analyse-i2c-eeprom.pdf"
 repoUrl: "https://github.com/piaw-cavarec"
 featured: true
@@ -12,458 +12,289 @@ latest: true
 comingSoon: false
 ---
 
-> 📄 **RAPPORT TECHNIQUE**  
-> **Évaluation de la Sécurité des Bus Inter-Composants : Sniffing Passif I²C, Rétro-Ingénierie de Mémoire EEPROM 24LC256 et Contre-Mesures Matérielles**  
-> *Banc d'essai d'instrumentation & rétro-ingénierie de bus de communication* — Piaw CAVAREC (Septembre 2026)  
-> 📥 **[Consulter / Télécharger le Rapport Technique Complet en PDF (23 pages, 511 Ko)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)**
+> 💡 **Deux manières de découvrir ce projet :**
+> - **Vous cherchez l'audit technique d'ingénierie complet ?** Un rapport académique et industriel de 23 pages (cotation CVSS 6.8, modélisation des menaces STRIDE, chronogrammes métrologiques et contre-mesures matérielles) est disponible en téléchargement direct :  
+>   📥 **[Consulter / Télécharger le Rapport Technique Complet en PDF (23 pages, 523 Ko)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)**
+> - **Vous voulez simplement comprendre comment ça marche sans être électronicien ?** Vous êtes au bon endroit ! Installez-vous confortablement : voici l'histoire racontée pas-à-pas, accessible à tous.
 
 ---
 
-## 1. Synthèse Scientifique & Cadre d'Évaluation Matérielle
+## 1. L'Intrigue : L'illusion de la boîte fermée
 
-Ce projet formalise la caractérisation électrique, l'interception passive non-invasive et l'exfiltration de données sensibles transitant sur un bus inter-composants au niveau circuit imprimé (PCB). Il pose un cadre méthodologique pour la sécurisation des architectures matérielles IoT et industrielles.
+Prenez un objet électronique chez vous : une alarme de maison, un badge d'immeuble, un thermostat connecté ou même la clé électronique d'une voiture moderne.
 
-### Fiche Technique de Synthèse du Banc d'Essai
+On a naturellement tendance à penser que parce que l'appareil est enfermé dans un boîtier en plastique solide et vissé, tout ce qui se passe à l'intérieur est automatiquement secret et protégé. Beaucoup d'entreprises fabriquent d'ailleurs leurs objets en se disant : *« La boîte est fermée, personne n'ira regarder ce qui circule dedans »*.
 
-| Paramètre | Spécification Technique / Description |
-| :--- | :--- |
-| **Cible d'Évaluation** | Mémoire EEPROM série I²C Microchip 24LC256 (Boîtier PDIP-8, 32 Ko) |
-| **Composant Hôte (Maître)** | Espressif ESP32-S3 (Xtensa 32-bit Dual-Core @ 240 MHz, DevKitC-1) |
-| **Protocole Analysé** | I²C (*Inter-Integrated Circuit*) en mode Standard (100 kHz) |
-| **Instrumentation de Mesure** | Analyseur logique USB 8 canaux 24 MHz (driver open-source `fx2lafw`) |
-| **Environnement Logiciel** | Suite Sigrok / PulseView, Framework PlatformIO sous VS Code (C++) |
-| **Nature de l'Attaque** | Écoute passive de bus sur carte (*On-board Bus Sniffing*), physique, non-invasive |
-| **Classification CVSS v3.1** | **6.8 (Gravité Moyenne / Impact Critique sur la Confidentialité)** |
-| **Vecteur CVSS v3.1** | `CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N` |
+En cybersécurité, c'est ce qu'on appelle une dangereuse illusion de sécurité (**« la sécurité par l'obscurité »**).
 
-### Résumé Exécutif & Constat de Sécurité
+**La question de ce week-end d'expérimentation était simple :**  
+Si un curieux muni d'un tournevis ouvre le boîtier et branche un petit appareil à moins de 25 € sur les composants électroniques, peut-il voler les mots de passe et les secrets de l'appareil en quelques secondes, sans rien casser et sans laisser la moindre trace ?
 
-Dans la conception des équipements électroniques (IoT, passerelles SCADA, dispositifs médicaux), les contraintes d'espace mémoire interne conduisent fréquemment à déporter des informations critiques (clés cryptographiques, certificats, jetons de session) sur des mémoires non-volatiles externes (EEPROM, Flash SPI).
-
-Un biais de conception prédominant, désigné sous le terme de **Perimeter Defense Fallacy**, postule implicitement que le boîtier mécanique externe de l'appareil suffit à garantir l'inviolabilité des bus de communication circulant sur le circuit imprimé.
-
-> **Résultat de l'évaluation :**  
-> À l'aide d'un banc d'instrumentation à faible coût (< 25 €), l'intégralité du trafic échangé entre le microcontrôleur hôte et la mémoire externe a été capturé passivement et décodé sans laisser aucune trace physique ni perturber le fonctionnement opérationnel du système. La clé d'authentification simulée (`SECRET_KEY_1234`) a été exfiltrée en clair dès sa première transaction, démontrant une rupture totale de confidentialité.
-
-### Schéma Fonctionnel du Vecteur d'Attaque
-
-```mermaid
-flowchart TD
-    subgraph BUS["Cible Physique & Bus Dévoilé"]
-        direction LR
-        ESP["Microcontrôleur Hôte<br/><b>ESP32-S3 (Xtensa 240MHz)</b>"]
-        EEPROM["EEPROM Externe<br/><b>Microchip 24LC256 (PDIP-8)</b>"]
-        ESP -- "Bus I²C en clair<br/>SDA / SCL @ 100 kHz" --> EEPROM
-    end
-
-    ANALYZER["Analyseur Logique USB<br/><b>8 Canaux / 24 MHz (fx2lafw)</b>"]
-    PULSE["PulseView / Sigrok<br/><b>Stacked Decoders : I²C + 24xx</b>"]
-    SECRET["Secret Exfiltré en Clair<br/><b>'SECRET_KEY_1234' (ASCII)</b>"]
-
-    ESP -- "Sondage Passif Haute Impédance<br/>(1 MΩ // 10 pF)" --> ANALYZER
-    ANALYZER -- "Flux USB brut" --> PULSE
-    PULSE -- "Décodage immédiat" --> SECRET
-```
-
-### Classification CVSS v3.1 & Modélisation des Menaces STRIDE
-
-```text
-================================================================================
-                    NOTATION DE VULNÉRABILITÉ CVSS v3.1 : 6.8
-================================================================================
-• Attack Vector (AV:P)        : Physical. Contact électrique direct avec les broches.
-• Attack Complexity (AC:L)    : Low. Aucune cryptographie complexe en l'absence de chiffrement.
-• Privileges Required (PR:N)  : None. Aucun privilège requis sur l'OS ou le firmware.
-• User Interaction (UI:N)     : None. Opère en totale autonomie dès la mise sous tension.
-• Scope (S:U)                 : Unchanged. Restreint au composant mémoire.
-• Confidentiality (C:H)       : High. Compromission totale des secrets transitant sur le bus.
-• Integrity (I:H)             : High. Absence d'authentification mutuelle (injection possible).
-• Availability (A:N)          : None. L'écoute passive ne dégrade pas le fonctionnement.
-================================================================================
-```
-
-| Menace STRIDE | Niveau | Conséquence Opérationnelle dans un Cas Industriel |
-| :--- | :---: | :--- |
-| **Spoofing** (Usurpation) | **CRITIQUE** | Récupération de certificats de device ou clés d'API pour cloner un équipement légitime. |
-| **Tampering** (Altération) | **ÉLEVÉ** | Injection active sur I²C pour altérer des seuils de capteurs ou les *Secure Boot Flags*. |
-| **Repudiation** (Répudiation) | **MOYEN** | Impossibilité de tracer ou prouver l'intégrité d'une écriture mémoire locale non signée. |
-| **Information Disclosure** | **CRITIQUE** | **Constaté sur banc.** Exfiltration passive et sans trace de clés de chiffrement de stockage. |
-| **Denial of Service** | **ÉLEVÉ** | Forçage de la ligne SCL ou SDA à la masse (*Bus Clamping*), neutralisant le bus. |
-| **Elevation of Privilege** | **CRITIQUE** | Contournement de licences logicielles ou altération des tables de privilèges en mémoire. |
+La réponse est oui. Et voici comment cela s'est passé.
 
 ---
 
-## 2. Journaling de Réalisation : Le Lab Vlog sur 1 Week-end
+## 2. Les Personnages de l'histoire
 
-*Comment ce banc d'essai a été conçu, assemblé et exploité de A à Z en laboratoire personnel au cours d'un week-end complet.*
+Pour comprendre cette expérience, nul besoin d'un diplôme d'ingénieur. Il suffit d'imaginer une conversation entre 4 acteurs très simples :
+
+1. 🧠 **Le Cerveau (Le microcontrôleur ESP32-S3) :** C'est le chef d'orchestre de l'appareil. Une puce pas plus grande qu'un ongle qui exécute les programmes, calcule et prend les décisions. Problème : dès qu'on débranche la prise ou la pile, comme quelqu'un qui s'endort profondément, il oublie tout ce qu'il savait.
+2. 📓 **Le Carnet de notes (La puce mémoire EEPROM 24LC256) :** C'est une toute petite puce noire à 8 pattes. Son rôle est de garder en mémoire les informations importantes (les mots de passe, les clés de sécurité, les réglages), même quand l'appareil est complètement éteint.
+3. 📞 **Le Fil téléphonique (Le bus de communication I²C) :** Ce sont deux fines pistes en cuivre gravées sur la carte électronique qui relient le Cerveau au Carnet de notes. Quand le Cerveau a besoin d'un mot de passe, il passe un « coup de fil » au Carnet de notes en lui envoyant des signaux électriques.
+4. 🕵️‍♂️ **Le Stéthoscope de l'espion (L'analyseur logique à 20 €) :** Un petit boîtier USB muni de petites pinces. Il ne coupe aucun fil et n'abîme rien : il vient juste se poser en douceur sur le fil téléphonique pour écouter discrètement les conversations, exactement comme un détective poserait un verre contre un mur.
 
 ```mermaid
 flowchart LR
-    V["<b>VENDREDI SOIR</b><br/>Prise en main ESP32<br/>Simu Wokwi & LED"]
-    SM["<b>SAMEDI MATIN</b><br/>Datasheet EEPROM<br/>Brochage & Pièges"]
-    SA["<b>SAMEDI APRÈS-MIDI</b><br/>Câblage I²C &<br/>Validation 0x42"]
-    D["<b>DIMANCHE</b><br/>Sniffing PulseView<br/>Exfiltration clé"]
+    Cerveau["🧠 <b>Le Cerveau</b><br/>(ESP32-S3)<br/><i>'Donne-moi le mot de passe !'</i>"]
+    Fil["📞 <b>Le Fil téléphonique</b><br/>(Bus I²C)<br/><i>Le mot de passe voyage sans être codé</i>"]
+    Memoire["📓 <b>Le Carnet de notes</b><br/>(EEPROM 24LC256)<br/><i>'Le voici : SECRET_KEY_1234'</i>"]
+    Espion["🕵️ <b>Le Stéthoscope espion</b><br/>(Analyseur logique à 20 €)<br/><i>Écoute discrètement sans rien perturber</i>"]
+    Ecran["💻 <b>L'Écran de contrôle</b><br/>(PulseView sur PC)<br/><i>Affiche la clé volée en direct !</i>"]
 
-    V --> SM --> SA --> D
+    Cerveau <-->|Messages| Fil
+    Fil <-->|Réponses| Memoire
+    Fil -.->|Écoute clandestine| Espion
+    Espion --> Ecran
 ```
 
 ---
 
-### Étape 1 (Vendredi soir) : Première prise en main de l'ESP32-S3 & le "Blink"
+## 3. Le Journal de bord : L'enquête pas-à-pas sur 1 week-end
 
-C'est la toute première fois que j'utilise ce microcontrôleur : une carte **Espressif ESP32-S3-DevKitC-1** équipée d'un processeur Xtensa 32-bit dual-core à 240 MHz.
+Voici le journal de bord de l'atelier, heure par heure, du premier composant branché jusqu'à l'interception finale du mot de passe.
 
-Pour démarrer proprement, j'installe l'extension **PlatformIO** sous VS Code et je crée un premier projet test : `esp32_s3_led_blink`.
+```mermaid
+flowchart LR
+    V["<b>VENDREDI SOIR</b><br/>Réveil du cerveau<br/>La petite ampoule"]
+    SM["<b>SAMEDI MATIN</b><br/>Inspection à la loupe<br/>La puce à 8 pattes"]
+    SA["<b>SAMEDI APRÈS-MIDI</b><br/>La première discussion<br/>Câblage & test du 42"]
+    DM["<b>DIMANCHE MATIN</b><br/>Le mot de passe<br/>Mise en place du secret"]
+    DA["<b>DIMANCHE APRÈS-MIDI</b><br/>Le cambriolage<br/>Exfiltration en direct"]
 
-#### La répétition générale sur simulateur (Wokwi)
-Avant même de toucher à un fil ou de risquer d'endommager la carte, je fais un montage rapide sur l'outil de simulation en ligne **Wokwi** pour vérifier le câblage de principe et le comportement du code Arduino :
-
-![Simulation Wokwi de l'ESP32-S3 avec LED](/images/projects/lab-analyse-protocoles-eeprom/wokwi-simulation-esp32-led.png)
-*Test préliminaire du code sur Wokwi.com avec une LED sur le GPIO 4.*
-
-Le code de test est volontairement minimaliste :
-
-```cpp
-#include <Arduino.h>
-
-const int LED_PIN = 4;
-
-void setup() {
-  pinMode(LED_PIN, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(LED_PIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_PIN, LOW);
-  delay(1000);
-}
+    V --> SM --> SA --> DM --> DA
 ```
 
-#### Test des outils anciens (La règle d'or du lab)
-Avant de connecter quoi que ce soit, une règle d'or pour éviter de perdre des heures sur des pannes fantômes : **tester les vieux outils**.
+---
 
-J'ai passé un coup de multimètre en mode bip sonore de continuité sur mes fils Dupont et sur les lignes de la breadboard. Résultat : deux fils femelles usés qui faisaient des faux contacts ont été mis à la poubelle avant d'attaquer !
+### Étape 1 (Vendredi soir) : Le réveil du cerveau & la petite ampoule
+
+Avant de manipuler des composants délicats, la règle numéro un en électronique est de s'assurer que notre cerveau électronique (le microcontrôleur ESP32-S3) fonctionne bien et qu'il obéit à nos ordres.
+
+Pour cela, on réalise l'équivalent du « Bonjour le monde » de l'électronique : lui ordonner d'allumer et d'éteindre une petite ampoule (une LED) toutes les secondes.
+
+#### La répétition générale sur ordinateur (Le simulateur)
+Pour être certain de ne pas griller le composant par mégarde, je commence par tester le montage sur un simulateur virtuel en ligne (*Wokwi*) :
+
+![Simulation virtuelle de l'allumage d'une LED](/images/projects/lab-analyse-protocoles-eeprom/wokwi-simulation-esp32-led.png)
+*Répétition générale sur simulateur : l'ordinateur fait clignoter l'ampoule virtuelle sans danger.*
+
+#### L'astuce du lab : tester les vieux outils !
+Avant de brancher quoi que ce soit sur la table, un réflexe essentiel : vérifier ses fils ! Avec un multimètre en mode « bip sonore », j'ai testé mes câbles. Bien m'en a pris : deux vieux fils fatigués avaient des faux contacts invisibles à l'œil nu. Mis directement à la poubelle, ils m'ont évité des heures de casse-tête inutile !
 
 #### Le montage réel sur table
-Le code validé sur le simulateur et le matériel vérifié, je passe au montage réel sur la plaque d'essai avec une LED jaune et sa résistance de limitation :
+Une fois le test virtuel validé et les câbles vérifiés, passage au monde réel sur la planche d'essai :
 
-![Montage réel de l'ESP32-S3 et LED sur breadboard](/images/projects/lab-analyse-protocoles-eeprom/montage-esp32-led-reel.jpg)
-*Le montage réel : la LED clignote au rythme d'une seconde. L'environnement de dev est validé !*
-
----
-
-### Étape 2 (Samedi matin) : Décryptage de l'EEPROM & Plongée dans la Datasheet
-
-Passons maintenant au cœur de la cible : la mémoire non-volatile externe. C'est un petit circuit intégré à 8 broches récupéré dans mes tiroirs.
-
-#### L'inspection à la loupe
-En observant le marquage gravé au laser sur le dessus du boîtier :
-
-![Boîtier PDIP-8 EEPROM 24LC256](/images/projects/lab-analyse-protocoles-eeprom/eeprom-24lc256.jpeg)
-*Le marquage gravé au laser : Microchip 24LC256 - I/P YU8 - 2601.*
-
-En décortiquant ce marquage :
-- **Logo :** Microchip Technology.
-- **24LC256 :** EEPROM série I²C d'une capacité de 256 Kbits (soit 32 Ko).
-- **I / P :** Plage de température industrielle (`I` pour -40 °C à +85 °C) et type de boîtier traversant (`P` pour PDIP 8 broches).
-- **YU8 / 2601 :** Traçabilité d'usine et date de fabrication (semaine 01 de l'année 2026).
-
-Direction le site du fabricant pour récupérer la documentation technique (*Datasheet Microchip DS20001203*).
-
-![Brochage de l'EEPROM 24LC256](/images/projects/lab-analyse-protocoles-eeprom/datasheet-schema-eeprom-24lc256.png)
-*Brochage officiel de la mémoire 24LC256 en boîtier PDIP-8.*
-
-#### Ce qu'il faut absolument retenir de la datasheet
-1. **Les adresses matérielles (A0, A1, A2) :** En reliant ces 3 broches à la masse (GND), on fixe l'adresse I²C de la puce à `0x50` (sur 7 bits).
-2. **La broche WP (Write Protect) :** Si on la relie à Vcc, la mémoire passe en lecture seule. Pour nos tests d'écriture, elle doit impérativement être connectée à GND.
-3. **Le piège du temps d'écriture (tWR) :** Quand on écrit dans une case mémoire, l'EEPROM utilise un petit générateur interne haute tension pour piéger des électrons dans ses cellules physiques. Ce cycle prend **jusqu'à 5 ms**. Pendant ces 5 ms, la puce désactive son interface I²C et refuse de répondre ! Il faut donc impérativement laisser un petit `delay(6)` à `delay(10)` en code après chaque écriture.
-4. **Les limites électriques (Absolute Maximum Ratings) :** Alimenter la puce en 3,3 V régulé depuis l'ESP32 pour respecter scrupuleusement les tolérances.
-
-![Spécifications limites d'exploitation Microchip](/images/projects/lab-analyse-protocoles-eeprom/absolute-max-ratings.png)
-*Les valeurs limites de tolérance pour éviter d'endommager la puce.*
+![Montage réel avec la LED jaune qui clignote](/images/projects/lab-analyse-protocoles-eeprom/montage-esp32-led-reel.jpg)
+*Le montage réel sur table : la petite LED jaune clignote au rythme d'une seconde. Le cerveau est parfaitement réveillé !*
 
 ---
 
-### Étape 3 (Samedi après-midi) : Câblage & Première Discussion I²C
+### Étape 2 (Samedi matin) : L'inspection à la loupe de la puce mémoire
 
-Une fois l'EEPROM comprise et les broches repérées, il est temps de passer au câblage de la liaison I²C sur plaque d'essai.
+Samedi matin, place à l'objectif principal : la mémoire qui va stocker nos futurs secrets. C'est un petit boîtier noir avec 8 pattes métalliques, récupéré dans mes tiroirs.
 
-#### Le montage complet ESP32 ↔ EEPROM
-Le bus I²C utilise deux lignes de communication fonctionnant en drain ouvert (*open-drain*) :
-- **SDA (données) :** reliée au GPIO 4 de l'ESP32-S3.
-- **SCL (horloge) :** reliée au GPIO 5 de l'ESP32-S3.
+![La petite puce mémoire EEPROM 24LC256 vue de près](/images/projects/lab-analyse-protocoles-eeprom/eeprom-24lc256.jpeg)
+*La puce vue de très près : un circuit intégré Microchip 24LC256 capable de stocker 32 000 caractères texte sans électricité.*
 
-Pour que ces lignes reviennent au niveau haut (3,3 V) au repos, j'ajoute deux résistances de tirage (*pull-up*) de 4,7 kΩ.
+En regardant les inscriptions gravées au laser sur le dessus, on découvre son identité : c'est une mémoire **Microchip 24LC256**. Elle peut retenir 32 kilo-octets (l'équivalent de plusieurs pages de texte) et conserver ces données pendant plus de 200 ans sans aucune pile !
 
-![Câblage ESP32-S3 vers plaque d'essai](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-eps32-s3.jpg)
-*L'ESP32-S3 relié aux lignes de données (GPIO 4) et d'horloge (GPIO 5).*
+#### La lecture du mode d'emploi du fabricant
+Comme pour monter un meuble en kit, impossible de brancher cette puce au hasard sans risquer de la détruire. On consulte donc sa fiche technique officielle (*datasheet*) pour savoir à quoi sert chacune de ses 8 pattes :
 
-![EEPROM 24LC256 sur breadboard avec résistances de pull-up](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-eeprom.jpg)
-*L'EEPROM 24LC256 installée avec ses résistances de rappel et ses broches d'adresse à la masse.*
+![Brochage officiel des 8 pattes de la puce](/images/projects/lab-analyse-protocoles-eeprom/datasheet-schema-eeprom-24lc256.png)
+*Le schéma des 8 pattes : l'alimentation électrique, la masse et les fils de discussion.*
 
-#### Le premier script de validation
-Pour s'assurer que la mémoire répond bien, j'écris un petit programme d'épreuve :
-1. Il scanne le bus pour trouver l'adresse `0x50`.
-2. Il écrit une valeur témoin `0x42` (le nombre 66 en décimal) à l'adresse mémoire `0x0010`.
-3. Il relit cette même case mémoire pour vérifier que la valeur est identique.
+Deux découvertes amusantes et indispensables dans cette notice :
+1. **La sieste obligatoire de la puce :** Quand on demande à la puce d'enregistrer une information, elle utilise un minuscule composant interne pour piéger des électrons dans sa matière. Cette opération lui prend 5 millièmes de seconde. Pendant cette micro-sieste, elle est totalement sourde et refuse de répondre ! Il faut donc que notre programme informatique apprenne à patienter un tout petit instant après chaque écriture.
+2. **Ne pas la suralimenter :** La puce aime être alimentée en 3,3 Volts. Au-delà de ses limites électriques strictes, elle grillerait immédiatement.
 
-```cpp
-#include <Arduino.h>
-#include <Wire.h>
-
-#define I2C_SDA 4
-#define I2C_SCL 5
-#define EEPROM_ADDR 0x50 // A0=GND, A1=GND, A2=GND
-
-bool writeEEPROM(uint8_t devAddr, uint16_t memAddr, uint8_t data) {
-  Wire.beginTransmission(devAddr);
-  Wire.write((uint8_t)(memAddr >> 8));   // Adresse haute (MSB)
-  Wire.write((uint8_t)(memAddr & 0xFF)); // Adresse basse (LSB)
-  Wire.write(data);
-  byte status = Wire.endTransmission();
-  delay(6); // Indispensable : cycle interne de 5 ms max
-  return (status == 0);
-}
-
-uint8_t readEEPROM(uint8_t devAddr, uint16_t memAddr) {
-  Wire.beginTransmission(devAddr);
-  Wire.write((uint8_t)(memAddr >> 8));
-  Wire.write((uint8_t)(memAddr & 0xFF));
-  Wire.endTransmission();
-
-  Wire.requestFrom(devAddr, (uint8_t)1);
-  if (Wire.available()) {
-    return Wire.read();
-  }
-  return 0xFF;
-}
-
-void setup() {
-  Serial.begin(115200);
-  delay(1500);
-  Serial.println("\n[ESP32-S3] Test de la 24LC256");
-  Wire.begin(I2C_SDA, I2C_SCL);
-
-  // 1. Scan de présence
-  Serial.print("[1/2] Scan de l'adresse 0x50... ");
-  Wire.beginTransmission(EEPROM_ADDR);
-  if (Wire.endTransmission() == 0) {
-    Serial.println("OK (Puce détectée)");
-  } else {
-    Serial.println("ÉCHEC ! Vérifie le câblage.");
-    return;
-  }
-
-  // 2. Écriture & Relecture témoin
-  uint16_t testAddr = 0x0010;
-  uint8_t payload = 0x42;
-  Serial.printf("[2/2] Écriture de 0x%02X à l'adresse 0x%04X... ", payload, testAddr);
-  writeEEPROM(EEPROM_ADDR, testAddr, payload);
-  Serial.println("OK");
-
-  uint8_t received = readEEPROM(EEPROM_ADDR, testAddr);
-  Serial.printf("Valeur lue : 0x%02X\n", received);
-
-  if (received == payload) {
-    Serial.println("--> RÉSULTAT : L'EEPROM fonctionne parfaitement !");
-  } else {
-    Serial.println("--> RÉSULTAT : Donnée corrompue.");
-  }
-}
-
-void loop() {}
-```
-
-**Verdict dans la console série :**
-```text
-[ESP32-S3] Test de la 24LC256
-[1/2] Scan de l'adresse 0x50... OK (Puce détectée)
-[2/2] Écriture de 0x42 à l'adresse 0x0010... OK
-Valeur lue : 0x42
---> RÉSULTAT : L'EEPROM fonctionne parfaitement !
-```
-La mémoire est opérationnelle, on peut passer au scénario de sécurité !
+![Limites électriques maximales recommandées par le fabricant](/images/projects/lab-analyse-protocoles-eeprom/absolute-max-ratings.png)
+*Les limites de sécurité électrique indiquées dans la documentation d'origine.*
 
 ---
 
-### Étape 4 (Dimanche matin) : Le Scénario de la Clé Secrète
+### Étape 3 (Samedi après-midi) : La première conversation entre le cerveau et la mémoire
 
-Pour simuler un équipement industriel réel (comme une passerelle IoT qui vérifie son jeton de session), je modifie le firmware :
-- Au démarrage (`setup`), l'ESP32 écrit une clé d'authentification secrète (`"SECRET_KEY_1234"`) dans l'EEPROM.
-- En boucle (`loop`), toutes les deux secondes, il vient relire cette clé sur le bus I²C.
+Le moment est venu de faire se parler le Cerveau et la Mémoire. On les relie sur la planche d'essai à l'aide de deux fils :
+- **Un fil pour les données (SDA) :** c'est par là que circulent les lettres et les chiffres.
+- **Un fil pour l'horloge (SCL) :** c'est le métronome qui donne le tempo pour que les deux puces lisent les signaux exactement à la même vitesse.
 
-```cpp
-#include <Arduino.h>
-#include <Wire.h>
+![Le microcontrôleur ESP32 relié aux fils de communication](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-eps32-s3.jpg)
+*Le microcontrôleur relié aux deux fils de communication.*
 
-#define I2C_SDA 4
-#define I2C_SCL 5
-#define EEPROM_ADDR 0x50
+![La puce mémoire installée sur sa plaque d'essai](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-eeprom.jpg)
+*La puce mémoire câblée avec ses petites résistances qui maintiennent la tension au repos.*
 
-const uint16_t MEM_ADDR = 0x0010;
-const char PAYLOAD[] = "SECRET_KEY_1234";
+#### Le test du nombre 42
+Pour vérifier que la liaison fonctionne, j'écris un petit programme test :
+1. Le cerveau envoie un signal pour toquer à la porte de la mémoire : *« Es-tu là ? »*
+2. Il lui confie un nombre test : **42** (le fameux nombre clin d'œil de la culture geek).
+3. Il coupe le contact, attend un instant, puis demande à la mémoire : *« Quel nombre t'ai-je confié tout à l'heure ? »*
+4. La mémoire répond : **42** !
 
-void writeEEPROM(uint16_t memAddress, const char* data) {
-  Wire.beginTransmission(EEPROM_ADDR);
-  Wire.write((uint8_t)(memAddress >> 8));
-  Wire.write((uint8_t)(memAddress & 0xFF));
-  for (int i = 0; data[i] != '\0'; i++) {
-    Wire.write((uint8_t)data[i]);
-  }
-  Wire.endTransmission();
-  delay(10);
-}
-
-void readEEPROM(uint16_t memAddress, uint8_t length) {
-  Wire.beginTransmission(EEPROM_ADDR);
-  Wire.write((uint8_t)(memAddress >> 8));
-  Wire.write((uint8_t)(memAddress & 0xFF));
-  Wire.endTransmission();
-
-  Wire.requestFrom((uint8_t)EEPROM_ADDR, length);
-  Serial.print("[Lecture I2C] : ");
-  while (Wire.available()) {
-    char c = Wire.read();
-    Serial.print(c);
-  }
-  Serial.println();
-}
-
-void setup() {
-  Serial.begin(115200);
-  Wire.begin(I2C_SDA, I2C_SCL);
-  Wire.setClock(100000); // 100 kHz standard
-  delay(1000);
-  Serial.println("\n--- Initialisation écriture EEPROM ---");
-  writeEEPROM(MEM_ADDR, PAYLOAD);
-  Serial.println("Écriture terminée.");
-}
-
-void loop() {
-  readEEPROM(MEM_ADDR, strlen(PAYLOAD));
-  delay(2000);
-}
-```
-
-La clé secrète transite désormais toutes les 2 secondes sur deux petites pistes en cuivre du circuit imprimé...
+Le résultat s'affiche avec succès sur l'ordinateur : la mémoire retient parfaitement ce qu'on lui donne. On peut maintenant passer aux choses sérieuses !
 
 ---
 
-### Étape 5 (Dimanche après-midi) : L'Arme du Crime — Sortie de l'Analyseur Logique
+### Étape 4 (Dimanche matin) : Le scénario du mot de passe secret
 
-C'est ici que commence l'audit matériel. Pour intercepter les communications sans perturber le microcontrôleur, j'utilise un petit **analyseur logique USB 8 canaux / 24 MHz** (basé sur le contrôleur Cypress FX2LP, trouvable pour moins de 25 €).
+Dimanche matin, on transforme notre montage en un véritable équipement industriel simulé (comme un boîtier de contrôle d'accès d'un bâtiment).
 
-Je connecte 3 sondes en dérivation directement sur les broches :
-- **Canal 0** sur SDA
-- **Canal 1** sur SCL
-- **Masse** sur le rail GND commun
+Au démarrage, le cerveau écrit dans la mémoire un mot de passe top-secret :  
+👉 **`SECRET_KEY_1234`**
 
-![Banc d'essai instrumenté avec analyseur logique](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-analyseur-logique.jpg)
-*Le banc d'essai complet : l'analyseur logique écoute passivement les lignes sans altérer le signal.*
+Puis, toutes les deux secondes, le cerveau vient relire ce mot de passe dans la mémoire pour vérifier que tout est en ordre.
 
-#### Configuration de PulseView
-Sous Linux, j'ouvre **PulseView** (l'interface graphique de la suite libre Sigrok).
-1. Le périphérique est instantanément reconnu grâce au pilote open-source `fx2lafw`.
-
-![Détection de l'analyseur sous PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-detection-analyseur-logique.png)
-*Sélection du pilote libre fx2lafw dans PulseView.*
-
-2. Je configure l'acquisition à **2 MHz** avec une mémoire tampon de **1 million d'échantillons (1 MSamples)**, ce qui nous donne une fenêtre de capture continue de 500 ms. Comme le bus I²C tourne à 100 kHz, échantillonner à 2 MHz offre un suréchantillonnage de 20×, parfait pour voir des fronts bien nets.
-
-![Configuration des canaux dans PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-renomage-canaux.png)
-*Renommage des canaux (SDA, SCL, GND) et paramétrage à 2 MHz / 1 MSamples.*
-
-#### L'astuce du déclencheur (Trigger)
-L'ESP32 met environ **1,5 seconde** à démarrer (chargement de la ROM de boot, initialisation des horloges). Si je lançais l'analyseur manuellement au pifomètre, le tampon de 500 ms se remplirait de vide avant même la première trame !
-
-**La solution :** placer un **déclencheur matériel sur front descendant sur SDA**.  
-Comme les lignes sont tirées au 3,3 V au repos, la toute première baisse de tension sur SDA avec l'horloge au repos marque la condition START de l'écriture initiale. L'analyseur attend patiemment et déclenche la capture pile au bon millième de seconde !
-
-![Configuration du trigger matériel sur SDA](/images/projects/lab-analyse-protocoles-eeprom/pulseview-canal-sda-trigger-descendant.png)
-*Réglage du trigger sur front descendant sur la ligne SDA.*
+À partir de cet instant, **le mot de passe secret voyage en permanence sur les deux fils en cuivre de la carte électronique.** Mais personne ne peut le voir à l'œil nu... du moins pas encore !
 
 ---
 
-### Étape 6 (Dimanche fin d'après-midi) : L'Interception & le Décodage en Direct
+### Étape 5 (Dimanche après-midi) : L'intervention de l'espion à 20 €
 
-Top départ : je redémarre l'ESP32. L'analyseur capture immédiatement la salve initiale d'écriture, puis la lecture cyclique !
+C'est ici que l'audit de sécurité commence. Pour intercepter ce mot de passe sans que personne ne s'en aperçoive, j'utilise un petit outil bien connu des bidouilleurs et des auditeurs en cybersécurité : un **analyseur logique USB**.
 
-![Vue globale du trafic I2C sous PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-sniff-eeprom.png)
-*Les impulsions électriques capturées : l'écriture du secret à gauche, suivie de la lecture.*
+Cet outil coûte moins de 25 € sur Internet. Il dispose de petites pinces métalliques très fines :
 
-À ce stade, nous n'avons que des signaux carrés bruts (des 0 et des 1). Pour les transformer en informations intelligibles, PulseView permet d'empiler des décodeurs protocolaires (*Stacked Decoders*) :
+![L'analyseur logique et ses pinces branchées sur le montage](/images/projects/lab-analyse-protocoles-eeprom/montage-eeprom-analyseur-logique.jpg)
+*L'espion est en place : 3 petites pinces accrochées délicatement aux pattes de la puce, sans rien débrancher.*
 
-#### 1. Premier décodeur : Le protocole I²C
-J'ajoute le décodeur **I²C** de base en lui indiquant que le canal 0 est SDA et le canal 1 est SCL.
+L'intérêt redoutable de cet outil :
+- **Il est totalement passif :** il ne consomme presque aucun courant, ne perturbe pas le signal et ne fait pas chauffer les composants.
+- **Il est indétectable :** le microcontrôleur continue de fonctionner normalement, sans se douter une seule seconde que quelqu'un écoute la conversation !
 
-![Sélection du décodeur I2C](/images/projects/lab-analyse-protocoles-eeprom/pulseview-trouver-i2c-decodeur.png)
-*Ajout du décodeur de protocole I²C standard.*
+#### La configuration de l'écran espion (PulseView)
+Sur mon ordinateur, j'ouvre un logiciel libre appelé **PulseView**. L'appareil est instantanément reconnu :
 
-Il assemble instantanément les signaux électriques en octets bruts et met en évidence les conditions START, STOP, et les accusés de réception ACK.
+![Détection automatique de l'analyseur logique dans le logiciel](/images/projects/lab-analyse-protocoles-eeprom/pulseview-detection-analyseur-logique.png)
+*Sélection du pilote de l'analyseur dans le logiciel PulseView.*
 
-#### 2. Deuxième décodeur : La couche applicative 24xx EEPROM
-Par-dessus le décodeur I²C, je clique sur **Stack Decoder** et j'empile le décodeur dédié aux mémoires **24xx EEPROM**.
+Je nomme les deux canaux d'écoute : le fil de données et le fil d'horloge :
 
-![Empilement du décodeur 24xx EEPROM](/images/projects/lab-analyse-protocoles-eeprom/pulseview-24lcxx-decodeur.png)
-*Empilement du décodeur 24xx au-dessus du flux I²C.*
+![Attribution des noms aux fils d'écoute](/images/projects/lab-analyse-protocoles-eeprom/pulseview-renomage-canaux.png)
+*Configuration des deux fils d'écoute dans PulseView.*
 
-Ce décodeur connaît la sémantique de notre mémoire : il sépare l'adresse 16 bits (`0x0010`), la commande d'écriture/lecture, et extrait directement la charge utile !
+#### L'astuce du déclencheur : attraper le secret au vol
+Le microcontrôleur met environ une seconde à démarrer. Si j'appuyais sur le bouton d'enregistrement manuellement, j'aurais 99 % de chances de cliquer trop tôt ou trop tard et de rater le moment précis où le mot de passe est envoyé.
 
-![Les canaux annotés dans PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-new-canal-24lc256.png)
-*L'empilement des 5 lignes d'annotations au-dessus des signaux logiques bruts.*
+**La solution :** programmer un déclencheur automatique (*trigger*). On dit au logiciel : *« Reste en veille. Dès que tu vois la toute première micro-goutte de tension sur le fil de données, commence à enregistrer immédiatement ! »*.
+
+![Réglage du déclencheur automatique au millième de seconde](/images/projects/lab-analyse-protocoles-eeprom/pulseview-canal-sda-trigger-descendant.png)
+*Le déclencheur automatique : l'enregistrement partira tout seul à la première milliseconde d'activité.*
+
+---
+
+### Étape 6 (Dimanche fin d'après-midi) : L'interception et la découverte du secret
+
+J'allume l'alimentation. En une fraction de seconde, le piège fonctionne : l'analyseur capture une rafale d'ondes électriques !
+
+![Les ondes électriques brutes capturées sur l'écran](/images/projects/lab-analyse-protocoles-eeprom/pulseview-sniff-eeprom.png)
+*Ce que voit la machine : des signaux électriques carrés, qui alternent entre 0 Volt et 3,3 Volts.*
+
+Pour des yeux humains, ces créneaux électriques ne veulent rien dire : ce ne sont que des impulsions qui montent et qui descendent à toute vitesse.
+
+Mais PulseView intègre une fonctionnalité magique : des **décodeurs de protocoles**. C'est comme brancher un interprète multilingue sur une conversation téléphonique en langue étrangère.
+
+#### 1. Le premier traducteur (Le décodeur I²C)
+On indique au logiciel que ces signaux électriques respectent les règles du protocole I²C :
+
+![Sélection du décodeur de protocole I2C](/images/projects/lab-analyse-protocoles-eeprom/pulseview-trouver-i2c-decodeur.png)
+*Ajout du décodeur qui regroupe les impulsions électriques en octets informatiques.*
+
+#### 2. Le deuxième traducteur (Le décodeur spécifique à la puce mémoire)
+On empile par-dessus un traducteur qui connaît par cœur le fonctionnement de notre mémoire 24LC256 :
+
+![Empilement du décodeur spécialisé pour la mémoire](/images/projects/lab-analyse-protocoles-eeprom/pulseview-24lcxx-decodeur.png)
+*Le décodeur spécialisé sait exactement où se trouvent les données utiles.*
+
+Le logiciel dessine alors des lignes d'annotations colorées au-dessus des signaux électriques :
+
+![Les signaux électriques traduits en informations claires](/images/projects/lab-analyse-protocoles-eeprom/pulseview-new-canal-24lc256.png)
+*Les signaux électriques bruts sont maintenant traduits en blocs d'informations intelligibles.*
 
 #### 3. Le secret apparaît sous nos yeux !
-En zoomant sur la ligne `I2C: Address/Data`, les octets transitant sur le bus apparaissent en clair sous forme de rectangles bleus :
+En zoomant sur les petites boîtes bleues décodées par le logiciel... surprise totale :
 
-![Exfiltration du secret sous PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-eeprom24xx-canal.png)
-*La preuve en image : les octets du secret s'alignent parfaitement dans PulseView.*
+![La clé secrète démasquée en clair sous PulseView](/images/projects/lab-analyse-protocoles-eeprom/pulseview-eeprom24xx-canal.png)
+*La preuve en direct : le mot de passe secret apparaît lettre par lettre à l'écran !*
 
-Traduisons les octets hexadécimaux capturés :
+Chaque petit bloc électrique correspond très exactement à une lettre de notre mot de passe secret :
 
-| Octet Hex | `0x53` | `0x45` | `0x43` | `0x52` | `0x45` | `0x54` | `0x5F` | `0x4B` | `0x45` | `0x59` | `0x5F` | `0x31` | `0x32` | `0x33` | `0x34` |
+| Code informatique | `0x53` | `0x45` | `0x43` | `0x52` | `0x45` | `0x54` | `0x5F` | `0x4B` | `0x45` | `0x59` | `0x5F` | `0x31` | `0x32` | `0x33` | `0x34` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Caractère ASCII** | **S** | **E** | **C** | **R** | **E** | **T** | **_** | **K** | **E** | **Y** | **_** | **1** | **2** | **3** | **4** |
+| **Lettre lisible** | **S** | **E** | **C** | **R** | **E** | **T** | **_** | **K** | **E** | **Y** | **_** | **1** | **2** | **3** | **4** |
 
 ```text
 ================================================================================
-                       SECRET EXFILTRÉ AVEC SUCCÈS :
-                           SECRET_KEY_1234
+                       MOT DE PASSE EXFILTRÉ EN CLAIR :
+                               SECRET_KEY_1234
 ================================================================================
 ```
 
-En quelques clics et avec un investissement matériel dérisoire, **100 % de la clé d'authentification a été dérobée**, sans laisser la moindre trace sur le système cible !
+En moins de 5 secondes, avec un équipement à 20 € et trois petites pinces, **la clé secrète a été entièrement dérobée**, sans laisser la moindre trace visible sur l'appareil.
 
-#### Le petit bonus : un glitch de bruit sur SDA
-En poussant le zoom sur les fronts d'horloge, j'ai même pu observer un petit pic parasite (*glitch*) sur la ligne SDA :
+#### La petite curiosité du lab : le hoquet électrique
+En observant de très près les signaux avec un zoom maximal, j'ai même repéré une toute petite anomalie électrique (un « glitch ») : une minuscule étincelle de bruit qui fait vaciller le signal pendant un milliardième de seconde.
 
-![Glitch de bruit sur le canal SDA](/images/projects/lab-analyse-protocoles-eeprom/pulseview-bruit-glitch-sda.png)
-*Zoom métrologique : un glitch de commutation visible sur la ligne de données.*
-
-Heureusement, ce glitch survient lorsque l'horloge SCL est basse ; le protocole I²C ne lisant la valeur de SDA que lorsque SCL est à l'état haut, cette micro-perturbation a été ignorée par la puce et n'a pas corrompu la transmission.
+![Zoom sur une petite imperfection électrique](/images/projects/lab-analyse-protocoles-eeprom/pulseview-bruit-glitch-sda.png)
+*Une toute petite perturbation sur le signal. Heureusement, elle est survenue au moment où la puce ne regardait pas, sans fausser la lecture.*
 
 ---
 
-### Étape 7 (Dimanche soir) : Le Bilan & les Contre-Mesures ("Zero Trust on PCB")
+## 4. Ce qu'il faut en retenir : La leçon pour le monde réel
 
-Ce week-end d'expérimentation démontre de manière très visuelle une réalité de la sécurité matérielle : **la sécurité par l'obscurité ou la confiance aveugle dans un boîtier fermé ne fonctionne pas.**
+Cette petite expérience de week-end illustre une réalité cruciale de la cybersécurité moderne : **un boîtier fermé ne protège rien si les composants à l'intérieur se murmurent des secrets en clair.**
 
-#### Comment sécuriser un vrai produit industriel ?
-Si vous concevez une carte électronique destinée à être déployée sur le terrain, voici les bonnes pratiques de remédiation :
+Dans le monde réel, beaucoup d'équipements électroniques (bornes de recharge de voitures, compteurs connectés, traceurs de marchandises, boîtiers domotiques) ont longtemps été conçus de cette manière pour économiser quelques centimes à la fabrication. Si un individu mal intentionné a un accès physique à l'appareil pendant ne serait-ce que 5 minutes, il peut l'ouvrir, copier les clés et cloner l'équipement.
 
-1. **Remplacer l'EEPROM par un Secure Element (Niveau Matériel) :**  
-   Utiliser une puce dédiée comme le **Microchip ATECC608A/B** ou le **NXP EdgeLock SE050**. Le microcontrôleur envoie un défi (*challenge*), la puce calcule la signature en interne et renvoie uniquement la réponse. **La clé privée ne transite jamais sur les pistes de la carte.**
-2. **Chiffrer la charge utile (Niveau Logiciel) :**  
-   Si l'EEPROM standard est conservée pour des raisons de coût, le microcontrôleur doit impérativement chiffrer les données (ex: AES-256-GCM ou ChaCha20-Poly1305) avant de les émettre sur le bus, en stockant la clé racine dans les **eFuses** internes de l'ESP32 protégés par le *Secure Boot* et le *Flash Encryption*.
-3. **Durcir le circuit imprimé (Règles de routage) :**  
-   Faire circuler les pistes I²C dans des couches internes du PCB (*stripline*) entourées de plans de masse, supprimer tous les points de test de fabrication (*ICT test pads*) sur les cartes de série commerciale, ou appliquer une résine d'encapsulation opaque (*potting compound*).
-4. **Verrouillage matériel d'écriture :**  
-   Pour des configurations figées, relier en dur la broche WP (*Write Protect*) au potentiel Vcc pour empêcher toute injection malveillante.
+### Comment fait-on pour concevoir des objets vraiment sécurisés ?
+
+Les ingénieurs en cybersécurité matérielle appliquent aujourd'hui ce que l'on appelle le principe du **« Zero Trust sur circuit imprimé »** : ne jamais faire confiance aux pistes en cuivre, même à l'intérieur de la machine !
+
+1. 🔒 **Remplacer le carnet de notes par un coffre-fort numérique :**  
+   Au lieu d'utiliser une puce mémoire ordinaire, on utilise un composant spécialisé appelé un **Secure Element** (c'est exactement la même technologie que la puce dorée de votre carte bancaire !). Le secret ne sort *jamais* de la puce. Si le cerveau veut vérifier l'identité, il lui pose une énigme mathématique ; la puce fait le calcul à l'intérieur d'elle-même dans son bunker blindé et renvoie juste la preuve de son calcul. Même avec des pinces, il n'y a aucun secret à écouter sur les fils !
+2. 🔑 **Parler en code secret (Le chiffrement) :**  
+   Si l'on doit absolument utiliser une mémoire ordinaire pour des raisons de coût, le cerveau doit chiffrer le message avant de l'envoyer. Si un espion écoute le fil téléphonique, il n'entendra qu'une bouillie de lettres incompréhensibles.
+3. 🛡️ **Cacher et blinder les pistes :**  
+   Sur les vraies cartes professionnelles, les fils de communication sont gravés au milieu des couches internes de la carte électronique (comme un câble sous-terrain). Impossible d'y accrocher des pinces sans percer la carte et la détruire. On peut aussi noyer la carte dans une résine noire opaque et indestructible.
 
 ---
 
-## 3. Ressources & Documents de Référence
+## 5. L'Espace Technique & Rapport d'Évaluation (Pour les Spécialistes)
 
-- 📑 **Rapport Scientifique Complet (23 pages) :** [Consulter / Télécharger le Whitepaper Officiel (PDF)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)
-- 💻 **Code source du banc d'essai :** Disponible sur mon [GitHub](https://github.com/piaw-cavarec)
-- 📚 **Références normatives :** NXP UM10204 (I2C Bus Spec), Microchip DS20001203 (24LC256), Espressif ESP32-S3 TRM, FIRST CVSS v3.1.
+Pour les ingénieurs en électronique, les auditeurs en sécurité offensive et les recruteurs techniques, l'ensemble de ce travail a été consigné dans un rapport d'audit formel.
+
+### Fiche de Synthèse d'Audit de Sécurité
+
+| Indicateur d'Évaluation | Valeur Formelle & Spécification |
+| :--- | :--- |
+| **Cible d'Évaluation** | Mémoire EEPROM série I²C Microchip 24LC256 (PDIP-8, 32 Ko) |
+| **Microcontrôleur Hôte** | Espressif ESP32-S3 (Xtensa 32-bit Dual-Core @ 240 MHz, DevKitC-1) |
+| **Protocole & Cadence** | Bus série synchrone I²C en mode Standard (100 kHz, SDA/SCL pull-up 4,7 kΩ) |
+| **Outil de Mesure** | Analyseur logique USB 8 canaux 24 MHz (Cypress FX2LP, driver libre `fx2lafw`) |
+| **Logiciel d'Analyse** | Suite Sigrok / PulseView (Décodeurs empilés I²C + Microchip 24xx) |
+| **Type de Vulnérabilité** | Écoute passive de bus physique sur PCB (*On-board Bus Sniffing*), non-invasive |
+| **Score de Gravité CVSS v3.1** | **6.8 (Gravité Moyenne / Impact Majeur sur la Confidentialité)** |
+| **Vecteur CVSS v3.1** | `CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N` |
+| **Menaces STRIDE constatées** | Information Disclosure (Critique), Spoofing (Critique), Tampering (Élevé) |
+
+### Télécharger le Rapport Technique Complet
+
+Le rapport officiel de 23 pages approfondit la dimension métrologique et architecturale :
+- Analyse détaillée des capacités parasites et de l'adaptation d'impédance du bus I²C.
+- Chronogrammes précis des temps de montée (*rise time*) et de descente (*fall time*).
+- Code source complet du firmware en C++ sous PlatformIO avec gestion des registres matériels.
+- Guide d'implémentation industrielle : cryptoprocesseur Microchip ATECC608A/B, NXP EdgeLock SE050, eFuses internes protégés et routage *stripline*.
+
+👉 **[Télécharger le Rapport Technique Officiel en PDF (23 pages, 523 Ko)](/docs/rapport-lab-analyse-i2c-eeprom.pdf)**  
+👉 **Code source et schémas disponibles sur mon profil [GitHub](https://github.com/piaw-cavarec)**
+
