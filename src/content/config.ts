@@ -12,6 +12,7 @@ const projectsCollection = defineCollection({
     repoUrl: z.string().optional(),
     liveUrl: z.string().optional(),
     featured: z.boolean().default(false),
+    latest: z.boolean().default(false),
     comingSoon: z.boolean().default(false),
   }),
 });

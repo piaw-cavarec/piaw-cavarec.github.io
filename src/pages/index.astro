@@ -5,9 +5,15 @@ import Layout from '../layouts/Layout.astro';
 const allProjects: CollectionEntry<'projects'>[] = await getCollection('projects');
 const totalProjectsCount = allProjects.length;
 
+// Latest spotlight project (by `latest: true` flag in frontmatter, or fallback to the eeprom lab)
+const latestProject = allProjects.find((p: CollectionEntry<'projects'>) => p.data.latest && !p.data.comingSoon)
+  || allProjects.find((p: CollectionEntry<'projects'>) => p.slug === 'lab-analyse-protocoles-eeprom');
+
 // Only completed featured projects on the homepage sorted alphabetically by title
+// Excludes the currently spotlighted latestProject so it doesn't appear twice consecutively.
+// When another project becomes `latest`, any previous project with `featured: true` will automatically reappear here!
 const completedFeatured = allProjects
-  .filter((p: CollectionEntry<'projects'>) => p.data.featured && !p.data.comingSoon)
+  .filter((p: CollectionEntry<'projects'>) => p.data.featured && !p.data.comingSoon && p.slug !== latestProject?.slug)
   .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => 
     a.data.title.localeCompare(b.data.title, 'fr', { sensitivity: 'base' })
   );
@@ -36,11 +42,95 @@ const completedFeatured = allProjects
         <a href="/contact" class="w-full xs:w-auto bg-zinc-100 text-zinc-950 px-4 py-2.5 rounded font-medium hover:bg-zinc-300 transition-colors text-center shadow-sm">
           Me contacter
         </a>
-        <a href="#projects" class="w-full xs:w-auto border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded hover:bg-zinc-900 transition-colors text-center">
-          Explorer les projets ↓
+        <a href="#latest" class="w-full xs:w-auto border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded hover:bg-zinc-900 transition-colors text-center">
+          Dernier projet & réalisations ↓
         </a>
       </div>
     </section>
+
+    <!-- Latest Project Section (Dernier Projet Réalisé) -->
+    {latestProject && (
+      <section id="latest" class="space-y-5 sm:space-y-6 border-t border-zinc-900 pt-8 sm:pt-12">
+        <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-0.5 rounded-full font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                À la une • Nouveau
+              </span>
+              <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest hidden sm:inline">
+                Dernière réalisation
+              </span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-semibold text-zinc-100 tracking-tight">
+              Dernier Projet Réalisé
+            </h2>
+          </div>
+          <span class="font-mono text-xs text-zinc-500 self-start xs:self-auto">
+            {latestProject.data.year}
+          </span>
+        </div>
+
+        <div class="relative group rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/60 via-zinc-950 to-zinc-950 p-5 sm:p-7 shadow-lg shadow-black/40 hover:border-zinc-700 transition-all duration-300">
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-mono text-[11px] text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded">
+                  {latestProject.data.role}
+                </span>
+                {latestProject.data.categories.map((cat: string) => (
+                  <span class="font-mono text-[10px] text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+
+              <h3 class="text-lg sm:text-xl font-bold text-zinc-100 group-hover:text-white transition-colors">
+                <a href={`/projects/${latestProject.slug}`} class="hover:underline">
+                  {latestProject.data.title}
+                </a>
+              </h3>
+            </div>
+
+            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              {latestProject.data.description}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              {latestProject.data.stack.map((tech: string) => (
+                <span class="font-mono text-[10px] bg-zinc-950 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded">
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-zinc-900">
+              <a 
+                href={`/projects/${latestProject.slug}`}
+                class="inline-flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 px-4 py-2 rounded-lg font-mono text-xs font-medium transition-all shadow-sm"
+              >
+                <span>Lire la fiche & journal de lab</span>
+                <span>→</span>
+              </a>
+
+              {latestProject.data.liveUrl && (
+                <a 
+                  href={latestProject.data.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white px-4 py-2 rounded-lg font-mono text-xs transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Rapport Technique PDF (23 pages)</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
 
     <!-- Featured Projects Section (Completed Featured Projects Alphabetical) -->
     <section id="projects" class="space-y-5 sm:space-y-8 border-t border-zinc-900 pt-8 sm:pt-12">

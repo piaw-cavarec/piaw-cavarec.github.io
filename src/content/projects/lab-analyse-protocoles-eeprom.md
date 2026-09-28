@@ -8,6 +8,7 @@ stack: ["I²C", "EEPROM 24LC256", "ESP32-S3", "PulseView", "Sigrok", "Analyseur 
 liveUrl: "/docs/rapport-lab-analyse-i2c-eeprom.pdf"
 repoUrl: "https://github.com/piaw-cavarec"
 featured: true
+latest: true
 comingSoon: false
 ---
 
