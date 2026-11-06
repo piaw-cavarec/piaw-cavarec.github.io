@@ -57,13 +57,13 @@ Au terme de l'analyse, **13 constats de sécurité** ont été identifiés avec 
 
 | ID | Domaine | Gravité (CVSS v3.1) | Constat & Description Synthétique |
 |---|---|---|---|
-| **AUTH-01** | Authentification | **Critique (20/25)** | Hash root MD5crypt ($1$) partagé sur l'ensemble du parc et cassable hors-ligne via GPU. |
+| **AUTH-01** | Authentification | **Critique (20/25)** | Hash root MD5crypt ($1$) extrait de la Flash, partagé sur l'ensemble du parc et cassable hors-ligne via GPU (hash non cassé durant l'audit). |
 | **OS-01** | Noyau Linux | **Critique (16/25)** | Noyau Linux 3.10.14 en fin de vie (EOL) vulnérable à Dirty COW (CVE-2016-5195) sans ASLR/PIE. |
 | **CRY-01** | Cryptographie | **Élevé (12/25)** | Clés privées client et certificats TLS conservés en clair sur la partition inscriptible `/conf`. |
 | **HW-02** | Mémoires | **Élevé (12/25)** | Flash SPI NOR lisible et réinscriptible sans aucune protection physique ni Secure Boot. |
-| **HW-01** | Interfaces | **Élevé (9/25)** | Port UART de débogage ouvert donnant un accès console root direct dès le démarrage. |
 | **NET-01** | Services | **Élevé (9/25)** | Démon Telnet présent dans l'image de production et réactivable via un script d'init. |
 | **CLD-01** | Cloud / OTA | **Élevé (8/25)** | Adresses IP cloud codées en dur appelées en transport HTTP non chiffré. |
+| **HW-01** | Interfaces | **Moyen (6/25)** | Port UART de débogage exposé et actif (console série 115 200 bauds), mais protégé par authentification : aucun shell root obtenu par ce vecteur. Ce blocage a motivé l'extraction directe de la Flash SPI. |
 
 ---
 
