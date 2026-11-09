@@ -12,7 +12,7 @@ Site vitrine personnel et portfolio professionnel de **Piaw CAVAREC**, Élève-I
 
 Le projet vedette d'audit de sécurité matérielle a été **strictement anonymisé** :
 - Retrait de toutes les marques, modèles, numéros de révision de cartes et de sérigraphie composant.
-- Présentation axée sur la **méthodologie technique** (cartographie PCB, probing UART, dump Flash SPI, analyse Ghidra, cotation CVSS v3.1, et roadmap de remédiation).
+- Présentation axée sur la **méthodologie technique** (cartographie PCB, probing UART, dump Flash SPI, analyse du firmware en équipe, cotation des risques impact × vraisemblance, et roadmap de remédiation).
 
 ---
 

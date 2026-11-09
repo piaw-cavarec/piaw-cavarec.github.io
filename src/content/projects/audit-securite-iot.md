@@ -1,109 +1,116 @@
 ---
-title: "Audit de Sécurité Matérielle & Firmware (IoT)"
-description: "Évaluation complète en conditions boîte noire d'un équipement connecté d'intérieur : cartographie PCB, dump Flash SPI, analyse statique du firmware et cotation CVSS v3.1."
+title: "Audit de sécurité matérielle & firmware d'une caméra IP (boîte noire)"
+description: "Projet d'équipe EPITA (mai 2026) : audit en boîte noire d'une caméra IP motorisée. J'ai pris en charge la partie matérielle (cartographie PCB, UART, dessoudage et lecture de la flash SPI) ; constats cotés en impact × vraisemblance et plan de remédiation priorisé."
 year: 2026
-role: "Audit de Sécurité & Rétro-ingénierie — EPITA"
+role: "Projet d'équipe EPITA (3 personnes) — responsable de la partie matérielle"
 categories: ["Hardware & Embarqué", "Cyber & Reverse"]
-stack: ["Ghidra", "Binwalk", "SPI Flash NOR", "UART Probing", "Linux Embarqué", "MIPS32", "CVSS v3.1"]
+stack: ["UART", "SPI", "Dessoudage CMS", "Programmateur de flash", "Binwalk", "Linux embarqué", "MIPS"]
 repoUrl: "https://github.com/piaw-cavarec"
 featured: true
 comingSoon: false
 ---
 
-> **Avis de confidentialité & déontologie :** Conformément aux règles d'éthique en cybersécurité et de protection de la propriété intellectuelle, les références exactes du constructeur, du modèle commercial, du PCB et des numéros de série des composants ont été anonymisées.
+> **Confidentialité :** la marque et le modèle de la caméra, ainsi que les adresses IP/MAC réelles, ont été volontairement anonymisés. Aucun extrait de clé privée ni de certificat n'est publié.
 
-## Problématique & Contexte
+## Contexte & périmètre
 
-L'objectif de cette mission d'audit réalisée en conditions **boîte noire** (sans documentation ni schématiques fournis) consistait à évaluer la posture de sécurité globale d'un équipement connecté d'intérieur (vidéosurveillance IP PTZ). 
+Projet noté du cours de mise en pratique de l'audit à l'EPITA (après la partie théorique), sur sujet libre. Nous étions une **équipe de trois**, sur environ un mois et demi, avec un rendu en **mai 2026**.
 
-L'analyse combine l'inspection matérielle physique de la carte électronique, l'extraction des mémoires non volatiles, l'analyse statique du micrologiciel (firmware de 8 Mo) et la cotation standardisée des risques selon la grille **CVSS v3.1** (référentiels OWASP IoT Top 10, ANSSI et ETSI EN 303 645).
+La cible : une **caméra IP motorisée (PTZ) d'intérieur**, achetée dans le commerce pour l'exercice. J'ai proposé ce sujet par goût pour le matériel, parce que l'impact d'une caméra est concret (le flux vidéo d'un logement), et en choisissant un modèle d'entrée de gamme avec l'hypothèse qu'il serait moins durci.
 
----
+L'audit a été mené en **boîte noire**, sans aucune documentation. L'objectif : déterminer ce qu'un attaquant peut obtenir à partir d'un **accès physique** à l'appareil. La démarche s'appuie sur les référentiels **OWASP IoT Top 10**, **ANSSI** et **ETSI EN 303 645**.
 
-## Cartographie Matérielle & Ingestion Physique
-
-L'inspection recto/verso du circuit imprimé (PCB) a permis de cartographier la surface d'attaque physique :
-
-- **Processeur principal (SoC)** : Architecture MIPS32 rel2 exécutant un noyau Linux embarqué. Composant dépourvu d'enrobage époxy.
-- **Mémoire NOR Flash SPI (8 Mo, boîtier SOP8)** : Stockage principal contenant l'intégralité de l'image firmware en clair (partitions `rootfs` SquashFS, `/app` SquashFS, et `/conf` JFFS2).
-- **EEPROM I²C (16 Ko, boîtier SOIC8)** : Mémoire non volatile chiffrée au repos (point positif de sécurité matérielle relevé).
-- **Interface de débogage UART (TX/RX/GND)** : Port série exposé et étamé sur le PCB, configuré à 115 200 bauds.
-- **Module Wi-Fi & Antennes U.FL** : Connectivité réseau sans fil.
+**Répartition :** j'ai pris en charge toute la **partie matérielle** (démontage, cartographie du PCB, recherche et exploitation de l'UART, dessoudage et lecture de la mémoire flash). Mes deux coéquipiers se sont concentrés sur le **reverse du firmware**.
 
 ---
 
-## Méthodologie d'Anonymisation & Étapes de l'Audit
+## Démarche matérielle (ma partie)
 
 ```mermaid
 flowchart LR
-    P1["<b>Phase 1 : Reconnaissance</b><br/>Inspection PCB & UART"]
-    P2["<b>Phase 2 : Extraction</b><br/>Dump NOR Flash SPI"]
-    P3["<b>Phase 3 : Analyse</b><br/>Ghidra & Binwalk"]
-    P4["<b>Phase 4 : Remédiation</b><br/>CVSS v3.1 & Roadmap"]
+    P1["<b>1. Cartographie</b><br/>Démontage & PCB"]
+    P2["<b>2. UART</b><br/>Console protégée"]
+    P3["<b>3. Extraction</b><br/>Dessoudage & lecture flash"]
+    P4["<b>4. Analyse</b><br/>Firmware (équipe)"]
+    P5["<b>5. Restitution</b><br/>Cotation & remédiation"]
 
-    P1 --> P2 --> P3 --> P4
+    P1 --> P2 --> P3 --> P4 --> P5
 ```
 
-1. **Reconnaissance & Probing** : Identification des boîtiers (SOP8, SOIC8), repérage des bus de communication et branchement d'un analyseur logique / convertisseur USB-UART.
-2. **Dessoudage & Extraction (Dump)** : Retrait de la mémoire Flash SPI NOR à l'air chaud et lecture directe du contenu binaire sur programmateur universel.
-3. **Décompilation & Analyse statique** : Extraction de l'arborescence du système de fichiers via `Binwalk` et rétro-ingénierie des binaires applicatifs sous `Ghidra` et `Radare2`.
-4. **Cotation des vulnérabilités** : Quantification des risques selon la formule de criticité : **Score = Impact × Vraisemblance**.
+1. **Démontage & cartographie du PCB** : identification des composants principaux :
+   - **SoC Ingenic T23** (architecture MIPS/XBurst) ;
+   - **Flash SPI NOR de 8 Mo** (boîtier SOP8), qui contient l'image firmware ;
+   - **EEPROM I²C de 16 Ko** (boîtier SOIC8), **chiffrée au repos**, un point positif ;
+   - **module Wi-Fi** avec antennes U.FL.
+2. **Recherche de l'UART de debug** : repérage de 4 pastilles sur la carte et identification des broches au multimètre. Le port est actif à **115 200 bauds**.
+3. **Constat sur la console** : elle lance un `getty` avec **login par mot de passe**. Il n'y a **pas d'accès root direct** par ce biais, et c'est précisément ce qui nous a poussés à passer par l'extraction physique de la mémoire.
+4. **Dessoudage de la flash** à l'air chaud, puis **lecture du contenu sur programmateur** pour obtenir un dump complet de l'image.
 
 ---
 
-## Synthèse des 13 Constats de Sécurité
+## Analyse du firmware (équipe)
 
-Au terme de l'analyse, **13 constats de sécurité** ont été identifiés avec un niveau de risque global **ÉLEVÉ** :
+À partir du dump, nous avons extrait l'arborescence avec **Binwalk**, puis analysé les fichiers de configuration et les binaires. L'image se compose de :
 
-| ID | Domaine | Gravité (CVSS v3.1) | Constat & Description Synthétique |
-|---|---|---|---|
-| **AUTH-01** | Authentification | **Critique (20/25)** | Hash root MD5crypt ($1$) partagé sur l'ensemble du parc et cassable hors-ligne via GPU. |
-| **OS-01** | Noyau Linux | **Critique (16/25)** | Noyau Linux 3.10.14 en fin de vie (EOL) vulnérable à Dirty COW (CVE-2016-5195) sans ASLR/PIE. |
-| **CRY-01** | Cryptographie | **Élevé (12/25)** | Clés privées client et certificats TLS conservés en clair sur la partition inscriptible `/conf`. |
-| **HW-02** | Mémoires | **Élevé (12/25)** | Flash SPI NOR lisible et réinscriptible sans aucune protection physique ni Secure Boot. |
-| **HW-01** | Interfaces | **Élevé (9/25)** | Port UART de débogage ouvert donnant un accès console root direct dès le démarrage. |
-| **NET-01** | Services | **Élevé (9/25)** | Démon Telnet présent dans l'image de production et réactivable via un script d'init. |
-| **CLD-01** | Cloud / OTA | **Élevé (8/25)** | Adresses IP cloud codées en dur appelées en transport HTTP non chiffré. |
+- un noyau **Linux 3.10.14** (uImage compressée LZMA), branche en fin de vie ;
+- le bootloader **U-Boot 2013.07** ;
+- un userland **BusyBox + uClibc 0.9.33** ;
+- les partitions `rootfs` (SquashFS), `/app` (SquashFS) et `/conf` (JFFS2).
 
 ---
 
-## Plan de Remédiation Priorisé
+## Constats
 
-Les actions correctives sont structurées sous forme de tableaux récapitulatifs organisés par horizons temporels :
+Au terme de l'audit, le rapport recense **13 constats de sécurité**, pour un niveau de risque global **ÉLEVÉ**. Les principaux sont présentés ci-dessous. Ceux qui proviennent du firmware ont tous été **revérifiés à la main sur le dump de la flash** ; HW-02 provient d'une **observation sur la carte**. Chaque risque est coté selon la grille **impact × vraisemblance** (note sur 25).
 
-### 1. Actions Immédiates — 0 à 30 jours (Release OTA)
-
-| Constat | Intitulé Action | Recommandation Technique | Prio. | Effort |
+| Réf. | Domaine | Cotation (impact × vraisemblance) | Constat | Preuve |
 |---|---|---|---|---|
-| **AUTH-01** | Hachage Root | Migrer vers *yescrypt / SHA-512-crypt* avec secret unique par appareil | **P0** | Faible |
-| **CRY-01** | Certificats Client | Chiffrer `/conf` et restreindre les permissions système des clés | **P0** | Moyen |
-| **HW-01** | Console Série | Désactiver `getty` dans `/etc/inittab`, masquer la console & protéger le bootloader | **P1** | Faible |
-| **NET-01** | Suppression Telnet | Retirer le binaire `telnetd` et les scripts d'activation des images prod | **P1** | Faible |
-| **CLD-01** | Transport HTTPS | Retirer les IP brutes en dur, imposer HTTPS + validation du certificat TLS | **P1** | Faible |
-| **CRY-03** | Nœud `/dev/mem` | Restreindre ou supprimer l'accès direct au nœud `/dev/mem` | **P1** | Faible |
-| **HW-05** | Écriture Flash | Activer la protection d'écriture matérielle (broche `WP` & verrouillage blocs) | **P1** | Faible |
-| **OTA-01** | Durcissement OTA | Valider rigoureusement la signature des images et intégrer un anti-rollback | **P1** | Moyen |
+| **AUTH-01** | Authentification | **Critique (20/25)** | Mot de passe root haché en **MD5crypt**, un algorithme faible | `/etc/shadow` : `root:$1$…` |
+| **OS-01** | Système | **Critique (16/25)** | Noyau **Linux 3.10.14**, branche en fin de vie : d'après sa version, il est potentiellement exposé à des CVE publiques comme **Dirty COW** (CVE-2016-5195), non testé. De plus, **tous les binaires sont compilés sans PIE** : leur code est chargé à une adresse fixe, ce qui réduit fortement l'efficacité de l'ASLR | en-tête uImage / `Linux version` ; `readelf -h` sur les binaires : `Type: EXEC` |
+| **CRY-01** | Cryptographie | **Élevé (12/25)** | **Clé privée RSA et certificats TLS stockés en clair** | `/conf` (JFFS2) : `client_key.pem`, `ca_cert.pem` |
+| **HW-02** | Mémoires | **Élevé (12/25)** | Flash SPI NOR **lisible et réinscriptible**, sans protection d'écriture ni **Secure Boot** | observation sur la carte |
+| **HW-01** | Interfaces | **Élevé (9/25)** | UART de debug actif, protégé par un login par mot de passe | `/etc/inittab` : `getty … console 115200` |
+| **NET-01** | Services | **Élevé (9/25)** | Démon **Telnet** présent : désactivé, mais réactivable | `/usr/sbin/telnetd` + ligne `#telnetd &` commentée |
+| **CLD-01** | Cloud | **Élevé (8/25)** | **Adresse cloud codée en dur, appelée en HTTP** (sans chiffrement) | chaîne `http://<ip>/v2` dans `/app/bin/ipc` |
+
+**Précisions sur AUTH-01 :**
+- Le hachage est **cassable** hors ligne (estimation : environ 5 h de calcul). Nous ne l'avons **pas cassé**, faute de temps.
+- Il est **très probablement partagé** par tous les appareils de cette gamme, puisqu'il fait partie de l'image firmware commune. C'est une déduction : une seule caméra a été testée.
+
+### Autre observation sur la carte
+
+- Aucun **enrobage** des puces : les composants sont directement accessibles pour le probing et le dessoudage.
+
+### Point positif
+
+- L'**EEPROM I²C est chiffrée au repos** : son contenu n'est pas exploitable par une simple lecture.
 
 ---
 
-### 2. Actions à Court / Moyen Terme — 1 à 3 mois
+## Plan de remédiation priorisé
 
-| Constat | Intitulé Action | Recommandation Technique | Prio. | Effort |
-|---|---|---|---|---|
-| **CRY-02** | Rétro-ingénierie IPC | Qualifier les MD5 et auditer `gv_exec` ; retirer les secrets statiques | **P2** | Moyen |
-| **OS-01** | CVE Noyau | Répertorier les CVE et appliquer les rétroportages disponibles auprès du fournisseur SoC | **P2** | Moyen |
-| **NET-01** | Intégrité au boot | Interdire l'exécution de scripts non signés depuis la partition `/conf` | **P2** | Moyen |
-| **CLD-01** | Endpoints Cloud | Centraliser la configuration des endpoints via découverte signée et révocable | **P2** | Moyen |
-| **CLD-02** | Provisionnement | Authentifier et chiffrer l'échange d'appairage initial (AP/BLE) | **P3** | Moyen |
+### Actions immédiates
+
+| Constat | Recommandation |
+|---|---|
+| **AUTH-01** | Un mot de passe **unique par appareil**, haché avec un algorithme lent (**yescrypt** ou **SHA-512-crypt**) |
+| **CRY-01** | **Chiffrer la partition `/conf`** qui contient les clés et certificats |
+| **HW-01** | **Désactiver la console série** en production |
+| **NET-01** | **Retirer `telnetd`** de l'image de production |
+| **CLD-01** | Passer en **HTTPS avec validation du certificat** |
+| **HW-02** | Activer la **protection d'écriture** de la flash (broche `WP` et verrouillage des blocs) |
+
+### À plus long terme
+
+| Constat | Recommandation |
+|---|---|
+| **HW-02** | Mettre en place un **Secure Boot** |
+| **CRY-01** | Stocker les clés dans un **élément sécurisé** dédié |
+| Observation carte | **Enrobage époxy** et abrasion des marquages des composants sensibles |
 
 ---
 
-### 3. Actions de Fond & Refonte Produit — 3 à 12 mois
+## Ce que j'en retire
 
-| Constat | Intitulé Action | Recommandation Technique | Prio. | Effort |
-|---|---|---|---|---|
-| **OS-01** | Migration Noyau LTS | Migrer vers un noyau LTS maintenu avec MAJ `libc`/`BusyBox` & mitigations (`ASLR`, `PIE`, `RELRO`) | **P2** | Élevé |
-| **HW-02/05** | Secure Boot | Implémenter le Secure Boot avec stockage chiffré ancré dans une racine de confiance matérielle (`eFuse`) | **P2** | Élevé |
-| **CRY-01** | Élément Sécurisé | Dédié (`TPM` / `Secure Element`) à la conservation inviolable des clés et à la rotation | **P2** | Élevé |
-| **HW-04** | Protection PCB | Enrobage époxy et abrasage des marquages des composants sensibles | **P3** | Faible |
-| **Global** | Conformité ETSI/CRA | Programme de conformité ETSI EN 303 645 / CRA et réévaluation périodique | **P3** | Moyen |
+- La valeur d'un audit tient d'abord à la **méthode** et à la **restitution**, pas seulement à la liste des failles trouvées.
+- Il faut toujours **distinguer un constat démontré** (vérifié sur le dump) **d'une piste à confirmer** (déduction, hypothèse non testée).
