@@ -14,303 +14,331 @@ const latestProject = allProjects.find((p: CollectionEntry<'projects'>) => p.dat
 // When another project becomes `latest`, any previous project with `featured: true` will automatically reappear here!
 const completedFeatured = allProjects
   .filter((p: CollectionEntry<'projects'>) => p.data.featured && !p.data.comingSoon && p.slug !== latestProject?.slug)
-  .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => 
+  .sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) =>
     a.data.title.localeCompare(b.data.title, 'fr', { sensitivity: 'base' })
   );
+
+const specs = [
+  { k: 'Formation', v: "EPITA — Bac+5" },
+  { k: 'Majeure', v: 'SecDevOps' },
+  { k: 'Recherche', v: "Stage de fin d'études (6 mois)" },
+  { k: 'Démarrage', v: 'Février 2027' },
+  { k: 'Base', v: 'Rennes, France' },
+  { k: 'Projets', v: `${totalProjectsCount} publiés` },
+];
+
+const skills = [
+  {
+    title: 'Sécurité Hardware & Bus',
+    items: 'UART, SPI, I2C, JTAG, SWD, Probing PCB, Dump Flash & EEPROM, Analyseur logique, Soudure CMS.',
+    icon: 'M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 7h10v10H7z',
+  },
+  {
+    title: 'Rétro-ingénierie & Outils',
+    items: 'Ghidra, Radare2, GDB, Binwalk, Wireshark, Cotation CVSS v3.1.',
+    icon: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16-4.35-4.35',
+  },
+  {
+    title: 'Systèmes & DevSecOps',
+    items: 'Linux, Docker, Kubernetes, CI/CD GitLab, Architecture sécurisée, VLAN, DMZ, VPN IPSec.',
+    icon: 'M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z',
+  },
+  {
+    title: 'Langages',
+    items: 'C, C++, Python, x86 ASM, Bash, SQL, Rust (notions).',
+    icon: 'm8 8-4 4 4 4m8-8 4 4-4 4m-2-12-4 16',
+  },
+];
+
+const timeline = [
+  {
+    date: 'Sept 2022 – Présent (Diplôme 2027)',
+    title: "EPITA — École d'Ingénieurs en Informatique",
+    meta: 'Majeure SecDevOps • Rennes, France',
+    text: "Cours clés : Architecture matérielle, Cryptographie & Algorithmes post-quantiques, DevSecOps, sécurisation d'IA.",
+    current: true,
+  },
+  {
+    date: 'Févr 2026 – Déc 2026',
+    title: 'Chargé de développement commercial & Projets — JECT',
+    meta: 'Rennes, France',
+    text: 'Pilotage de projets techniques, cadrage du cahier des charges, chiffrage et suivi des livrables.',
+  },
+  {
+    date: 'Sept 2025 – Janv 2026',
+    title: 'Développeur Full Stack — libheros',
+    meta: 'Paris, France',
+    text: 'Plateforme e-santé traitant des données de santé à caractère personnel (RGPD / HDS). Sensibilisation cybersécurité.',
+  },
+  {
+    date: 'Janv 2024 – Mai 2024',
+    title: "Chulalongkorn University — Faculté d'Ingénierie",
+    meta: 'Échange international • Bangkok, Thaïlande',
+    text: "Algorithmique avancée, mathématiques appliquées, management de l'innovation.",
+  },
+  {
+    date: '2018',
+    title: 'Stagiaire en Diagnostic & Dépannage Électronique',
+    meta: 'Initiation Hardware & Diagnostic matériel',
+    text: "Diagnostic de pannes matérielles, analyse de cartes électroniques, test d'équipements et contrôle de composants.",
+  },
+];
+
+const interests = [
+  { k: 'Sport', v: 'Callisthénie' },
+  { k: 'Cinéma', v: 'Films & Séries' },
+  { k: 'Musique', v: 'Rap & Jazz' },
+  { k: 'Loisir', v: 'Jeux Vidéo' },
+];
 ---
 
 <Layout title="Piaw CAVAREC — Élève-Ingénieur EPITA (SecDevOps & Audit Hardware)">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-16 space-y-10 sm:space-y-20">
-    
-    <!-- Hero / Profile Intro -->
-    <section class="space-y-5 sm:space-y-6">
-      <div class="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 rounded-full text-[11px] xs:text-xs font-mono text-zinc-300 max-w-full leading-snug">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-        <span class="break-words">Recherche Stage de fin d'études (6 mois) — Févr. 2027</span>
+  <div class="shell space-y-20 py-10 sm:space-y-28 sm:py-16 lg:py-20">
+
+    <!-- Hero -->
+    <section class="grid items-center gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+      <div class="reveal space-y-6 sm:space-y-7">
+        <div class="inline-flex max-w-full items-center gap-2.5 rounded-full border border-ink-700 bg-ink-900/80 px-3 py-1.5 font-mono text-[11px] leading-snug text-ink-200 xs:text-xs">
+          <span class="status-dot"></span>
+          <span class="break-words">Recherche Stage de fin d'études (6 mois) — Févr. 2027</span>
+        </div>
+
+        <h1 class="text-balance font-display text-[2.6rem] font-semibold leading-[1.02] text-ink-100 xs:text-5xl sm:text-6xl lg:text-7xl">
+          Piaw <span class="text-signal-400">CAVAREC</span>
+        </h1>
+
+        <p class="max-w-2xl text-sm leading-relaxed text-ink-300 sm:text-lg">
+          Élève-Ingénieur à l'<strong class="font-semibold text-ink-100">EPITA (Bac+5)</strong> spécialisé en <strong class="font-semibold text-ink-100">Audit Hardware, Sécurité des Systèmes Embarqués, Rétro-ingénierie et DevSecOps</strong>.
+          Passionné par l'analyse bas niveau des micrologiciels, la sécurité matérielle et la conception d'architectures résilientes.
+        </p>
+
+        <div class="flex flex-col gap-3 pt-1 xs:flex-row xs:flex-wrap">
+          <a href="/contact" class="btn-primary w-full xs:w-auto">
+            Me contacter <span aria-hidden="true">→</span>
+          </a>
+          <a href="#projects" class="btn-ghost w-full xs:w-auto">
+            Projets vedettes ↓
+          </a>
+        </div>
       </div>
 
-      <h1 class="text-3xl xs:text-4xl md:text-5xl font-semibold tracking-tight text-zinc-100">
-        Piaw CAVAREC
-      </h1>
-
-      <p class="text-xs xs:text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl">
-        Élève-Ingénieur à l'<strong>EPITA (Bac+5)</strong> spécialisé en <strong>Audit Hardware, Sécurité des Systèmes Embarqués, Rétro-ingénierie et DevSecOps</strong>. 
-        Passionné par l'analyse bas niveau des micrologiciels, la sécurité matérielle et la conception d'architectures résilientes.
-      </p>
-
-      <div class="flex flex-col xs:flex-row flex-wrap gap-2.5 sm:gap-4 pt-1 sm:pt-2 text-xs font-mono">
-        <a href="/contact" class="w-full xs:w-auto bg-zinc-100 text-zinc-950 px-4 py-2.5 rounded font-medium hover:bg-zinc-300 transition-colors text-center shadow-sm">
-          Me contacter
-        </a>
-        <a href="#projects" class="w-full xs:w-auto border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded hover:bg-zinc-900 transition-colors text-center">
-          Projets vedettes ↓
-        </a>
-      </div>
+      <!-- Fiche technique -->
+      <aside class="reveal card overflow-hidden [animation-delay:120ms]" aria-label="Fiche technique">
+        <div class="flex items-center justify-between border-b border-ink-800 px-5 py-3">
+          <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-500">Datasheet</span>
+          <span class="font-mono text-[11px] text-ink-500">REV. 2026</span>
+        </div>
+        <dl class="divide-y divide-ink-800/80 font-mono text-xs">
+          {specs.map((s) => (
+            <div class="grid grid-cols-[96px_1fr] gap-3 px-5 py-3 sm:grid-cols-[110px_1fr]">
+              <dt class="text-ink-500">{s.k}</dt>
+              <dd class="text-ink-100">{s.v}</dd>
+            </div>
+          ))}
+        </dl>
+        <div class="border-t border-ink-800 px-5 py-4">
+          <div class="signal-trace"></div>
+          <div class="mt-2 flex justify-between font-mono text-[10px] text-ink-600">
+            <span>SCL</span><span>Audit · Reverse · DevSecOps</span>
+          </div>
+        </div>
+      </aside>
     </section>
 
-    <!-- Latest Project Section (Dernier Projet Réalisé) -->
+    <!-- Dernier projet réalisé -->
     {latestProject && (
-      <section id="latest" class="space-y-5 sm:space-y-6 border-t border-zinc-900 pt-8 sm:pt-12">
-        <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-2 mb-1.5">
-              <span class="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-0.5 rounded-full font-medium">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                À la une • Nouveau
-              </span>
-              <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest hidden sm:inline">
-                Dernière réalisation
-              </span>
-            </div>
-            <h2 class="text-xl sm:text-2xl font-semibold text-zinc-100 tracking-tight">
-              Dernier Projet Réalisé
-            </h2>
+      <section id="latest" class="scroll-mt-24 space-y-6 sm:space-y-8">
+        <div class="flex flex-col justify-between gap-3 xs:flex-row xs:items-end">
+          <div class="space-y-2">
+            <div class="eyebrow"><span class="eyebrow-num">01</span><span>Dernière réalisation</span></div>
+            <h2 class="section-title">Dernier Projet Réalisé</h2>
           </div>
-          <span class="font-mono text-xs text-zinc-500 self-start xs:self-auto">
-            {latestProject.data.year}
+          <span class="chip-accent self-start xs:self-auto">
+            <span class="status-dot h-1.5 w-1.5"></span>
+            À la une • Nouveau
           </span>
         </div>
 
-        <div class="relative group rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/60 via-zinc-950 to-zinc-950 p-5 sm:p-7 shadow-lg shadow-black/40 hover:border-zinc-700 transition-all duration-300">
-          <div class="space-y-4">
-            <div class="space-y-2">
+        <article class="card card-ticks group overflow-hidden">
+          <div class="grid lg:grid-cols-[1fr_300px]">
+            <div class="space-y-5 p-5 sm:p-8">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="font-mono text-[11px] text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded">
-                  {latestProject.data.role}
-                </span>
+                <span class="chip text-ink-200">{latestProject.data.role}</span>
                 {latestProject.data.categories.map((cat: string) => (
-                  <span class="font-mono text-[10px] text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded">
-                    {cat}
-                  </span>
+                  <span class="chip border-transparent bg-transparent text-ink-500">#{cat}</span>
                 ))}
               </div>
 
-              <h3 class="text-lg sm:text-xl font-bold text-zinc-100 group-hover:text-white transition-colors">
-                <a href={`/projects/${latestProject.slug}`} class="hover:underline">
+              <h3 class="text-balance font-display text-2xl font-semibold leading-tight text-ink-100 sm:text-3xl">
+                <a href={`/projects/${latestProject.slug}`} class="transition-colors hover:text-signal-300">
                   {latestProject.data.title}
                 </a>
               </h3>
-            </div>
 
-            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-              {latestProject.data.description}
-            </p>
+              <p class="max-w-2xl text-sm leading-relaxed text-ink-300 sm:text-base">
+                {latestProject.data.description}
+              </p>
 
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              {latestProject.data.stack.map((tech: string) => (
-                <span class="font-mono text-[10px] bg-zinc-950 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded">
-                  {tech}
-                </span>
-              ))}
-            </div>
-
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-zinc-900">
-              <a 
-                href={`/projects/${latestProject.slug}`}
-                class="inline-flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 px-4 py-2 rounded-lg font-mono text-xs font-medium transition-all shadow-sm"
-              >
-                <span>Lire la fiche & journal de lab</span>
-                <span>→</span>
-              </a>
-
-              {latestProject.data.liveUrl && (
-                <a 
-                  href={latestProject.data.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center gap-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white px-4 py-2 rounded-lg font-mono text-xs transition-colors"
-                >
-                  <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>Rapport Technique PDF (23 pages)</span>
+              <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+                <a href={`/projects/${latestProject.slug}`} class="btn-primary">
+                  <span>Lire la fiche & journal de lab</span>
+                  <span aria-hidden="true">→</span>
                 </a>
-              )}
+
+                {latestProject.data.liveUrl && (
+                  <a href={latestProject.data.liveUrl} target="_blank" rel="noopener noreferrer" class="btn-ghost">
+                    <svg class="h-3.5 w-3.5 text-signal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Rapport Technique PDF (23 pages)</span>
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div class="border-t border-ink-800 bg-ink-950/50 p-5 sm:p-8 lg:border-l lg:border-t-0">
+              <div class="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.18em] text-ink-500">
+                <span>Stack</span>
+                <span>{latestProject.data.year}</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                {latestProject.data.stack.map((tech: string) => (
+                  <span class="chip">{tech}</span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </article>
       </section>
     )}
 
-    <!-- Featured Projects Section (Completed Featured Projects Alphabetical) -->
-    <section id="projects" class="space-y-5 sm:space-y-8 border-t border-zinc-900 pt-8 sm:pt-12">
-      <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-3">
-        <div>
-          <h2 class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-1">Sélection</h2>
-          <h3 class="text-xl sm:text-2xl font-semibold text-zinc-100 tracking-tight flex items-center gap-2.5 sm:gap-3 flex-wrap">
+    <!-- Projets vedettes -->
+    <section id="projects" class="scroll-mt-24 space-y-6 sm:space-y-8">
+      <div class="flex flex-col justify-between gap-3 xs:flex-row xs:items-end">
+        <div class="space-y-2">
+          <div class="eyebrow"><span class="eyebrow-num">02</span><span>Sélection</span></div>
+          <h2 class="section-title flex flex-wrap items-center gap-3">
             <span>Projets Vedettes</span>
-            <span class="inline-flex items-center gap-1.5 font-mono text-[11px] sm:text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-medium shadow-sm">
-              <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
-              <span>{totalProjectsCount} projets au total</span>
-            </span>
-          </h3>
+            <span class="chip rounded-full font-sans text-xs text-ink-300">{totalProjectsCount} projets au total</span>
+          </h2>
         </div>
-        <a href="/projects" class="text-xs font-mono text-zinc-400 hover:text-zinc-100 transition-colors self-start xs:self-auto">
+        <a href="/projects" class="self-start font-mono text-xs text-ink-400 transition-colors hover:text-signal-400 xs:self-auto">
           Tous les projets →
         </a>
       </div>
 
-      <div class="grid gap-4 sm:gap-6">
-        {completedFeatured.map((project: CollectionEntry<'projects'>) => (
-          <a 
-            href={`/projects/${project.slug}`}
-            class="group border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-600 p-4 xs:p-5 sm:p-6 rounded-xl transition-all duration-200 block shadow-sm hover:shadow-lg hover:shadow-zinc-950/80"
-          >
-            <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-1.5 sm:gap-2 mb-2">
-              <h4 class="text-base sm:text-lg font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                {project.data.title}
-              </h4>
-              <span class="font-mono text-xs text-zinc-500 shrink-0">{project.data.year}</span>
+      <div class="grid gap-4 sm:gap-5 md:grid-cols-2">
+        {completedFeatured.map((project: CollectionEntry<'projects'>, i: number) => (
+          <a href={`/projects/${project.slug}`} class="card card-link card-ticks group flex flex-col p-5 sm:p-6">
+            <div class="mb-4 flex items-center justify-between font-mono text-[11px] text-ink-500">
+              <span>P-{String(i + 1).padStart(2, '0')}</span>
+              <span>{project.data.year}</span>
             </div>
-
-            <p class="text-xs text-zinc-400 mb-3.5 leading-relaxed">
+            <h3 class="mb-3 text-balance font-display text-lg font-semibold leading-snug text-ink-100 transition-colors group-hover:text-signal-300 sm:text-xl">
+              {project.data.title}
+            </h3>
+            <p class="mb-5 text-sm leading-relaxed text-ink-400">
               {project.data.description}
             </p>
-
-            <div class="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+            <div class="mt-auto space-y-4">
               <div class="flex flex-wrap gap-1.5">
-                {project.data.stack.map((tech: string) => (
-                  <span class="font-mono text-[10px] bg-zinc-950 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded">
-                    {tech}
-                  </span>
+                {project.data.stack.slice(0, 5).map((tech: string) => (
+                  <span class="chip">{tech}</span>
                 ))}
+                {project.data.stack.length > 5 && (
+                  <span class="px-1 py-0.5 font-mono text-[11px] text-ink-500">+{project.data.stack.length - 5}</span>
+                )}
               </div>
-              <span class="font-mono text-xs text-zinc-500 group-hover:text-zinc-200 group-hover:translate-x-1 transition-all">
-                Fiche détaillée →
-              </span>
+              <div class="flex items-center justify-between border-t border-ink-800 pt-4 font-mono text-xs text-ink-500">
+                <span>Fiche détaillée</span>
+                <span class="transition-all group-hover:translate-x-1 group-hover:text-signal-400" aria-hidden="true">→</span>
+              </div>
             </div>
           </a>
         ))}
       </div>
 
-      <div class="text-center pt-2 sm:pt-4">
-        <a href="/projects" class="inline-flex items-center gap-2 font-mono text-xs text-zinc-400 hover:text-zinc-100 border border-zinc-900 hover:border-zinc-700 px-4 py-2.5 rounded transition-colors w-full xs:w-auto justify-center">
+      <div class="pt-2 text-center">
+        <a href="/projects" class="btn-ghost w-full xs:w-auto">
           Consulter l'index complet des projets →
         </a>
       </div>
     </section>
 
-    <!-- Technical Skills Section -->
-    <section id="skills" class="space-y-5 sm:space-y-6 border-t border-zinc-900 pt-8 sm:pt-12">
-      <div>
-        <h2 class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-1">Savoir-Faire</h2>
-        <h3 class="text-xl sm:text-2xl font-semibold text-zinc-100 tracking-tight">Compétences Techniques</h3>
+    <!-- Compétences techniques -->
+    <section id="skills" class="scroll-mt-24 space-y-6 sm:space-y-8">
+      <div class="space-y-2">
+        <div class="eyebrow"><span class="eyebrow-num">03</span><span>Savoir-Faire</span></div>
+        <h2 class="section-title">Compétences Techniques</h2>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-6 font-mono text-xs">
-        <div class="border border-zinc-900 p-4 sm:p-5 rounded-lg space-y-2 bg-zinc-950/40">
-          <div class="text-zinc-200 font-semibold mb-1.5 sm:mb-3">Sécurité Hardware & Bus</div>
-          <div class="text-zinc-400 leading-relaxed">
-            UART, SPI, I2C, JTAG, SWD, Probing PCB, Dump Flash & EEPROM, Analyseur logique, Soudure CMS.
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {skills.map((s) => (
+          <div class="card card-ticks space-y-4 p-5">
+            <span class="grid h-10 w-10 place-items-center rounded-xl border border-ink-700 bg-ink-850 text-signal-400">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+                <path d={s.icon} />
+              </svg>
+            </span>
+            <h3 class="font-display text-base font-semibold text-ink-100">{s.title}</h3>
+            <p class="font-mono text-xs leading-relaxed text-ink-400">{s.items}</p>
           </div>
-        </div>
-
-        <div class="border border-zinc-900 p-4 sm:p-5 rounded-lg space-y-2 bg-zinc-950/40">
-          <div class="text-zinc-200 font-semibold mb-1.5 sm:mb-3">Rétro-ingénierie & Outils</div>
-          <div class="text-zinc-400 leading-relaxed">
-            Ghidra, Radare2, GDB, Binwalk, Wireshark, Cotation CVSS v3.1.
-          </div>
-        </div>
-
-        <div class="border border-zinc-900 p-4 sm:p-5 rounded-lg space-y-2 bg-zinc-950/40">
-          <div class="text-zinc-200 font-semibold mb-1.5 sm:mb-3">Systèmes & DevSecOps</div>
-          <div class="text-zinc-400 leading-relaxed">
-            Linux, Docker, Kubernetes, CI/CD GitLab, Architecture sécurisée, VLAN, DMZ, VPN IPSec.
-          </div>
-        </div>
-
-        <div class="border border-zinc-900 p-4 sm:p-5 rounded-lg space-y-2 bg-zinc-950/40">
-          <div class="text-zinc-200 font-semibold mb-1.5 sm:mb-3">Langages</div>
-          <div class="text-zinc-400 leading-relaxed">
-            C, C++, Python, x86 ASM, Bash, SQL, Rust (notions).
-          </div>
-        </div>
+        ))}
       </div>
     </section>
 
-    <!-- Experience & Education Section -->
-    <section id="about" class="space-y-6 sm:space-y-8 border-t border-zinc-900 pt-8 sm:pt-12">
-      <div>
-        <h2 class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-1">Parcours</h2>
-        <h3 class="text-xl sm:text-2xl font-semibold text-zinc-100 tracking-tight">Expériences & Formation</h3>
-      </div>
+    <!-- Parcours -->
+    <section id="about" class="scroll-mt-24 grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-14">
+      <div class="space-y-2 lg:sticky lg:top-24 lg:self-start">
+        <div class="eyebrow"><span class="eyebrow-num">04</span><span>Parcours</span></div>
+        <h2 class="section-title">Expériences & Formation</h2>
 
-      <div class="space-y-6 sm:space-y-8 text-sm">
-        <!-- EPITA (Ongoing) -->
-        <div class="border-l border-zinc-800 pl-3.5 sm:pl-4 space-y-1">
-          <div class="font-mono text-xs text-zinc-500">Sept 2022 – Présent (Diplôme 2027)</div>
-          <div class="font-semibold text-zinc-100">EPITA — École d'Ingénieurs en Informatique</div>
-          <div class="text-xs font-mono text-zinc-400">Majeure SecDevOps • Rennes, France</div>
-          <p class="text-xs text-zinc-400 mt-2 leading-relaxed">
-            Cours clés : Architecture matérielle, Cryptographie & Algorithmes post-quantiques, DevSecOps, sécurisation d'IA.
-          </p>
-        </div>
-
-        <!-- JECT -->
-        <div class="border-l border-zinc-800 pl-3.5 sm:pl-4 space-y-1">
-          <div class="font-mono text-xs text-zinc-500">Févr 2026 – Déc 2026</div>
-          <div class="font-semibold text-zinc-100">Chargé de développement commercial & Projets — JECT</div>
-          <div class="text-xs font-mono text-zinc-400">Rennes, France</div>
-          <p class="text-xs text-zinc-400 mt-2 leading-relaxed">
-            Pilotage de projets techniques, cadrage du cahier des charges, chiffrage et suivi des livrables.
-          </p>
-        </div>
-
-        <!-- libheros -->
-        <div class="border-l border-zinc-800 pl-3.5 sm:pl-4 space-y-1">
-          <div class="font-mono text-xs text-zinc-500">Sept 2025 – Janv 2026</div>
-          <div class="font-semibold text-zinc-100">Développeur Full Stack — libheros</div>
-          <div class="text-xs font-mono text-zinc-400">Paris, France</div>
-          <p class="text-xs text-zinc-400 mt-2 leading-relaxed">
-            Plateforme e-santé traitant des données de santé à caractère personnel (RGPD / HDS). Sensibilisation cybersécurité.
-          </p>
-        </div>
-
-        <!-- Chulalongkorn -->
-        <div class="border-l border-zinc-800 pl-3.5 sm:pl-4 space-y-1">
-          <div class="font-mono text-xs text-zinc-500">Janv 2024 – Mai 2024</div>
-          <div class="font-semibold text-zinc-100">Chulalongkorn University — Faculté d'Ingénierie</div>
-          <div class="text-xs font-mono text-zinc-400">Échange international • Bangkok, Thaïlande</div>
-          <p class="text-xs text-zinc-400 mt-2 leading-relaxed">
-            Algorithmique avancée, mathématiques appliquées, management de l'innovation.
-          </p>
-        </div>
-
-        <!-- Stage Électronique 2018 -->
-        <div class="border-l border-zinc-800 pl-3.5 sm:pl-4 space-y-1">
-          <div class="font-mono text-xs text-zinc-500">2018</div>
-          <div class="font-semibold text-zinc-100">Stagiaire en Diagnostic & Dépannage Électronique</div>
-          <div class="text-xs font-mono text-zinc-400">Initiation Hardware & Diagnostic matériel</div>
-          <p class="text-xs text-zinc-400 mt-2 leading-relaxed">
-            Diagnostic de pannes matérielles, analyse de cartes électroniques, test d'équipements et contrôle de composants.
-          </p>
-        </div>
-      </div>
-
-      <!-- Centres d'intérêt -->
-      <div class="pt-6 border-t border-zinc-900/60 space-y-4">
-        <h4 class="text-xs font-mono text-zinc-500 uppercase tracking-widest">Centres d'Intérêt</h4>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 font-mono text-xs">
-          <div class="border border-zinc-900 bg-zinc-900/30 p-2.5 sm:p-3.5 rounded-lg space-y-1">
-            <span class="text-zinc-500 text-[10px] uppercase block">Sport</span>
-            <span class="text-zinc-200 font-semibold text-xs leading-tight block break-words">Callisthénie</span>
-          </div>
-          <div class="border border-zinc-900 bg-zinc-900/30 p-2.5 sm:p-3.5 rounded-lg space-y-1">
-            <span class="text-zinc-500 text-[10px] uppercase block">Cinéma</span>
-            <span class="text-zinc-200 font-semibold text-xs leading-tight block break-words">Films & Séries</span>
-          </div>
-          <div class="border border-zinc-900 bg-zinc-900/30 p-2.5 sm:p-3.5 rounded-lg space-y-1">
-            <span class="text-zinc-500 text-[10px] uppercase block">Musique</span>
-            <span class="text-zinc-200 font-semibold text-xs leading-tight block break-words">Rap & Jazz</span>
-          </div>
-          <div class="border border-zinc-900 bg-zinc-900/30 p-2.5 sm:p-3.5 rounded-lg space-y-1">
-            <span class="text-zinc-500 text-[10px] uppercase block">Loisir</span>
-            <span class="text-zinc-200 font-semibold text-xs leading-tight block break-words">Jeux Vidéo</span>
+        <div class="space-y-3 pt-8">
+          <h3 class="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-500">Centres d'Intérêt</h3>
+          <div class="grid grid-cols-2 gap-2">
+            {interests.map((it) => (
+              <div class="rounded-xl border border-ink-800 bg-ink-900/60 p-3">
+                <span class="block font-mono text-[10px] uppercase text-ink-500">{it.k}</span>
+                <span class="block break-words text-sm font-medium text-ink-100">{it.v}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      <ol class="relative space-y-4 before:absolute before:bottom-4 before:left-[7px] before:top-4 before:w-px before:bg-ink-800">
+        {timeline.map((t) => (
+          <li class="relative pl-8">
+            <span class:list={[
+              'absolute left-0 top-6 grid h-[15px] w-[15px] place-items-center rounded-full border',
+              t.current ? 'border-signal-500 bg-signal-950' : 'border-ink-600 bg-ink-950',
+            ]}>
+              <span class:list={['h-1.5 w-1.5 rounded-full', t.current ? 'bg-signal-400' : 'bg-ink-500']}></span>
+            </span>
+            <div class="card p-5">
+              <div class:list={['font-mono text-xs', t.current ? 'text-signal-400' : 'text-ink-500']}>{t.date}</div>
+              <div class="mt-1.5 font-display text-base font-semibold text-ink-100 sm:text-lg">{t.title}</div>
+              <div class="mt-0.5 font-mono text-xs text-ink-400">{t.meta}</div>
+              <p class="mt-3 text-sm leading-relaxed text-ink-400">{t.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- Appel à l'action -->
+    <section class="card overflow-hidden">
+      <div class="grid items-center gap-6 p-6 sm:p-10 md:grid-cols-[1fr_auto]">
+        <div class="space-y-3">
+          <div class="eyebrow"><span class="status-dot"></span><span>Disponible pour Stage — Février 2027</span></div>
+          <h2 class="text-balance font-display text-2xl font-semibold text-ink-100 sm:text-3xl">
+            Audit Hardware, Sécurité Embarquée & Rétro-ingénierie.
+          </h2>
+        </div>
+        <a href="/contact" class="btn-primary">Me contacter <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="signal-trace opacity-40"></div>
     </section>
 
   </div>
 </Layout>
-

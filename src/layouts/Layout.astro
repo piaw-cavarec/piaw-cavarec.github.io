@@ -1,135 +1,183 @@
 ---
+import '../styles/global.css';
+
 interface Props {
   title: string;
   description?: string;
 }
 
 const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPITA (Bac+5) spécialisé en audit hardware, rétro-ingénierie et DevSecOps." } = Astro.props;
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const navItems = [
+  { href: '/', label: 'Accueil', match: (p: string) => p === '/' },
+  { href: '/projects', label: 'Projets', match: (p: string) => p.startsWith('/projects') },
+  { href: '/#about', label: 'À propos', match: () => false },
+];
 ---
 
 <!DOCTYPE html>
-<html lang="fr" class="bg-zinc-950 text-zinc-100 antialiased selection:bg-zinc-800 selection:text-zinc-100 scroll-smooth">
+<html lang="fr" class="bg-ink-950 text-ink-100 antialiased scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0b0a" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0b0a'/%3E%3Cpath d='M6 21h5V11h10v10h5' fill='none' stroke='%23b8f35a' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="min-h-screen flex flex-col justify-between font-sans bg-zinc-950 text-zinc-100 border-zinc-900 relative">
-    <header class="border-b border-zinc-900 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-        <a href="/" class="font-mono text-sm sm:text-base font-semibold tracking-tight text-zinc-100 hover:text-zinc-400 transition-colors shrink-0">
-          piaw.cavarec
+  <body class="relative flex min-h-screen flex-col font-sans text-ink-200">
+    <!-- Halo d'ambiance en haut de page -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[520px] bg-[radial-gradient(ellipse_60%_60%_at_50%_0%,rgba(184,243,90,0.07),transparent_70%)]"></div>
+
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-signal-400 focus:px-3 focus:py-2 focus:text-ink-950">
+      Aller au contenu
+    </a>
+
+    <header class="sticky top-0 z-50 border-b border-ink-800/80 bg-ink-950/75 backdrop-blur-xl">
+      <div class="shell flex h-16 items-center justify-between gap-3">
+        <a href="/" class="group flex shrink-0 items-center gap-2.5" aria-label="Accueil — piaw.cavarec">
+          <span class="grid h-8 w-8 place-items-center rounded-lg border border-ink-700 bg-ink-900 transition-colors group-hover:border-signal-600/60">
+            <svg viewBox="0 0 32 32" class="h-5 w-5" aria-hidden="true">
+              <path d="M5 21h5V11h12v10h5" fill="none" stroke="#b8f35a" stroke-width="2.5" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="font-mono text-sm font-semibold tracking-tight text-ink-100">
+            piaw<span class="text-signal-400">.</span>cavarec
+          </span>
         </a>
-        
-        <!-- Desktop & Tablet Navigation -->
-        <nav class="hidden sm:flex items-center gap-4 sm:gap-6 text-xs font-mono text-zinc-400">
-          <a href="/" class="hover:text-zinc-100 transition-colors">Accueil</a>
-          <a href="/projects" class="hover:text-zinc-100 transition-colors">Projets</a>
-          <a href="/#about" class="hover:text-zinc-100 transition-colors">À propos</a>
-          <a 
-            href="/contact" 
-            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-3.5 py-1.5 rounded-full transition-all text-xs flex items-center gap-1.5 shadow-sm font-sans shrink-0"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+
+        <!-- Navigation desktop & tablette -->
+        <nav class="hidden items-center gap-1 sm:flex" aria-label="Navigation principale">
+          <div class="flex items-center gap-1 rounded-full border border-ink-800 bg-ink-900/60 p-1 font-mono text-xs">
+            {navItems.map((item) => (
+              <a
+                href={item.href}
+                aria-current={item.match(path) ? 'page' : undefined}
+                class:list={[
+                  'rounded-full px-3.5 py-1.5 transition-colors',
+                  item.match(path) ? 'bg-ink-800 text-ink-100' : 'text-ink-400 hover:text-ink-100',
+                ]}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+          <a href="/contact" class="btn-primary ml-2 rounded-full px-4 py-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-ink-950"></span>
             <span>Contact</span>
           </a>
         </nav>
 
-        <!-- Mobile Navigation Controls (< sm) -->
-        <div class="flex items-center gap-2.5 sm:hidden">
-          <a 
-            href="/contact" 
-            class="bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-medium px-2.5 py-1 rounded-full transition-all text-xs flex items-center gap-1 shadow-sm font-sans shrink-0"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-            <span>Contact</span>
+        <!-- Contrôles mobile (< sm) -->
+        <div class="flex items-center gap-2 sm:hidden">
+          <a href="/contact" class="btn-primary rounded-full px-3 py-1.5 text-[11px]">
+            Contact
           </a>
-
           <button
             id="mobileMenuBtn"
             type="button"
             aria-label="Ouvrir le menu"
             aria-expanded="false"
-            class="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-700"
+            aria-controls="mobileMenu"
+            class="rounded-lg border border-ink-800 bg-ink-900 p-2 text-ink-300 transition-colors hover:text-ink-100"
           >
-            <svg id="hamburgerIcon" class="w-5 h-5 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            <svg id="hamburgerIcon" class="block h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h10" />
             </svg>
-            <svg id="closeIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg id="closeIcon" class="hidden h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
 
-      <!-- Mobile Dropdown Menu Drawer -->
-      <div 
-        id="mobileMenu" 
-        class="hidden sm:hidden border-b border-zinc-900 bg-zinc-950/95 backdrop-blur-md px-5 py-5 space-y-4 font-mono text-sm text-zinc-300 animate-fadeIn"
+      <!-- Menu mobile -->
+      <div
+        id="mobileMenu"
+        class="animate-fadeIn hidden border-t border-ink-800 bg-ink-950/95 px-4 pb-5 pt-3 font-mono text-sm text-ink-300 backdrop-blur-md sm:hidden"
       >
-        <a href="/" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
-          Accueil
+        <a href="/" class="mobile-nav-link flex items-center justify-between border-b border-ink-800/70 py-3 transition-colors hover:text-ink-100">
+          <span>Accueil</span><span class="text-ink-600">01</span>
         </a>
-        <a href="/projects" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
-          Projets & Réalisations
+        <a href="/projects" class="mobile-nav-link flex items-center justify-between border-b border-ink-800/70 py-3 transition-colors hover:text-ink-100">
+          <span>Projets & Réalisations</span><span class="text-ink-600">02</span>
         </a>
-        <a href="/#about" class="mobile-nav-link block py-2 border-b border-zinc-900/60 hover:text-zinc-100 transition-colors">
-          À propos / Parcours
+        <a href="/#about" class="mobile-nav-link flex items-center justify-between border-b border-ink-800/70 py-3 transition-colors hover:text-ink-100">
+          <span>À propos / Parcours</span><span class="text-ink-600">03</span>
         </a>
-        <a href="/contact" class="mobile-nav-link block py-2 text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
-          Me Contacter →
+        <a href="/contact" class="mobile-nav-link flex items-center justify-between py-3 font-medium text-signal-400 transition-colors hover:text-signal-300">
+          <span>Me Contacter</span><span>→</span>
         </a>
 
-        <div class="pt-2 text-[11px] text-zinc-500 font-mono flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <div class="mt-2 flex items-center gap-2 text-[11px] text-ink-500">
+          <span class="status-dot"></span>
           <span>EPITA SecDevOps • Stage Févr. 2027</span>
         </div>
       </div>
     </header>
 
-    <main class="flex-grow">
+    <main id="main" class="relative z-10 flex-grow">
       <slot />
     </main>
 
-    <footer class="border-t border-zinc-900 py-8 text-center text-xs font-mono text-zinc-600">
-      <div class="max-w-4xl mx-auto px-4 text-center">
-        &copy; {new Date().getFullYear()} Piaw CAVAREC — EPITA SecDevOps
+    <footer class="relative z-10 mt-16 border-t border-ink-800 bg-ink-950/80">
+      <div class="signal-trace opacity-30"></div>
+      <div class="shell grid gap-8 py-10 sm:grid-cols-3">
+        <div class="space-y-2">
+          <div class="font-mono text-sm font-semibold text-ink-100">
+            piaw<span class="text-signal-400">.</span>cavarec
+          </div>
+          <p class="max-w-xs text-xs leading-relaxed text-ink-500">
+            Élève-Ingénieur EPITA — Audit Hardware, Sécurité des Systèmes Embarqués, Rétro-ingénierie et DevSecOps.
+          </p>
+        </div>
+
+        <nav class="space-y-2 font-mono text-xs" aria-label="Pied de page">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-600">Navigation</div>
+          <ul class="space-y-1.5 text-ink-400">
+            <li><a href="/" class="transition-colors hover:text-signal-400">Accueil</a></li>
+            <li><a href="/projects" class="transition-colors hover:text-signal-400">Projets</a></li>
+            <li><a href="/#about" class="transition-colors hover:text-signal-400">À propos</a></li>
+            <li><a href="/contact" class="transition-colors hover:text-signal-400">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="space-y-2 font-mono text-xs">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-ink-600">Liens</div>
+          <ul class="space-y-1.5 text-ink-400">
+            <li><a href="mailto:cavarec.piaw@gmail.com" class="transition-colors hover:text-signal-400">cavarec.piaw@gmail.com</a></li>
+            <li><a href="https://linkedin.com/in/piaw-cavarec" target="_blank" rel="noopener" class="transition-colors hover:text-signal-400">LinkedIn ↗</a></li>
+            <li><a href="https://github.com/piaw-cavarec" target="_blank" rel="noopener" class="transition-colors hover:text-signal-400">GitHub ↗</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-ink-900">
+        <div class="shell flex flex-col gap-1 py-5 font-mono text-[11px] text-ink-600 xs:flex-row xs:items-center xs:justify-between">
+          <span>&copy; {new Date().getFullYear()} Piaw CAVAREC — EPITA SecDevOps</span>
+          <span>Rennes, France</span>
+        </div>
       </div>
     </footer>
 
-    <!-- Framework-style Circular Rotating "Back to top" Button -->
+    <!-- Bouton « Retour en haut » circulaire et rotatif -->
     <button
       id="backToTopBtn"
-      aria-label="Back to top"
-      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 hover:bg-zinc-800 backdrop-blur-md shadow-2xl opacity-0 pointer-events-none translate-y-3 transition-all duration-300 flex items-center justify-center group overflow-hidden"
+      aria-label="Retour en haut"
+      class="group pointer-events-none fixed bottom-4 right-4 z-50 flex h-12 w-12 translate-y-3 items-center justify-center overflow-hidden rounded-full border border-ink-700 bg-ink-900/90 text-ink-300 opacity-0 shadow-2xl backdrop-blur-md transition-all duration-300 hover:border-signal-600/60 hover:text-signal-300 sm:bottom-6 sm:right-6 sm:h-16 sm:w-16"
     >
-      <!-- Center Arrow -->
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width="14" 
-        height="14" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"
-        class="z-10 sm:w-4 sm:h-4 group-hover:-translate-y-0.5 transition-transform"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="z-10 transition-transform group-hover:-translate-y-0.5 sm:h-4 sm:w-4">
         <path d="m18 15-6-6-6 6"/>
       </svg>
-
-      <!-- Circular SVG Text "BACK TO TOP" -->
-      <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full p-1 pointer-events-none select-none hidden sm:block">
+      <svg viewBox="0 0 100 100" class="pointer-events-none absolute inset-0 hidden h-full w-full select-none p-1 sm:block">
         <path id="circlePath" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
         <g id="rotatingRing" class="origin-center">
-          <text class="text-[9px] font-mono uppercase tracking-[0.22em] fill-zinc-400 group-hover:fill-zinc-200 transition-colors font-medium">
+          <text class="fill-ink-400 font-mono text-[9px] font-medium uppercase tracking-[0.22em] transition-colors group-hover:fill-signal-300">
             <textPath href="#circlePath" startOffset="0%">
               BACK TO TOP • BACK TO TOP •
             </textPath>
@@ -138,31 +186,8 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
       </svg>
     </button>
 
-    <style is:global>
-      /* Responsive markdown prose tables & pre blocks */
-      .prose table {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .prose pre {
-        max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      /* Mobile menu fade animation */
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-6px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-    </style>
-
     <script>
-      // Back to top button logic
+      // Bouton « Retour en haut »
       const backToTopBtn = document.getElementById('backToTopBtn');
       const rotatingRing = document.getElementById('rotatingRing');
       let lastScrollY = window.scrollY;
@@ -187,14 +212,14 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
           }
 
           lastScrollY = currentScrollY;
-        });
+        }, { passive: true });
 
         backToTopBtn.addEventListener('click', () => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       }
 
-      // Mobile Menu Toggle logic
+      // Menu mobile
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
       const hamburgerIcon = document.getElementById('hamburgerIcon');
@@ -203,40 +228,26 @@ const { title, description = "Portfolio de Piaw CAVAREC, élève-ingénieur EPIT
 
       if (mobileMenuBtn && mobileMenu && hamburgerIcon && closeIcon) {
         const toggleMobileMenu = () => {
-          const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-          const nextState = !isExpanded;
-
+          const nextState = mobileMenuBtn.getAttribute('aria-expanded') !== 'true';
           mobileMenuBtn.setAttribute('aria-expanded', String(nextState));
-          if (nextState) {
-            mobileMenu.classList.remove('hidden');
-            hamburgerIcon.classList.add('hidden');
-            closeIcon.classList.remove('hidden');
-          } else {
-            mobileMenu.classList.add('hidden');
-            hamburgerIcon.classList.remove('hidden');
-            closeIcon.classList.add('hidden');
-          }
+          mobileMenuBtn.setAttribute('aria-label', nextState ? 'Fermer le menu' : 'Ouvrir le menu');
+          mobileMenu.classList.toggle('hidden', !nextState);
+          hamburgerIcon.classList.toggle('hidden', nextState);
+          closeIcon.classList.toggle('hidden', !nextState);
         };
 
         mobileMenuBtn.addEventListener('click', toggleMobileMenu);
 
-        // Close menu on link click
         mobileNavLinks.forEach((link) => {
           link.addEventListener('click', () => {
-            if (mobileMenuBtn.getAttribute('aria-expanded') === 'true') {
-              toggleMobileMenu();
-            }
+            if (mobileMenuBtn.getAttribute('aria-expanded') === 'true') toggleMobileMenu();
           });
         });
 
-        // Close on ESC key
         window.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && mobileMenuBtn.getAttribute('aria-expanded') === 'true') {
-            toggleMobileMenu();
-          }
+          if (e.key === 'Escape' && mobileMenuBtn.getAttribute('aria-expanded') === 'true') toggleMobileMenu();
         });
       }
     </script>
   </body>
 </html>
-
